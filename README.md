@@ -46,15 +46,15 @@ git clone https://github.com/vinigm/projeto-ddos.git
 cd projeto-ddos
 ```
 
-### 3. Criar ambiente virtual e instalar dependências
+### 3. Criar ambiente virtual
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate          # macOS/Linux
 # .venv\Scripts\activate           # Windows
-
-pip install -r requirements.txt
 ```
+
+> 💡 As dependências são instaladas **automaticamente** pela primeira célula do notebook (chama `pip install -r requirements.txt` por baixo). Se preferir instalar manualmente antes, rode `pip install -r requirements.txt`.
 
 ### 4. Obter os dados
 
