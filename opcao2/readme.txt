@@ -1,0 +1,1 @@
+essa pasta contem os dados e organização de arquivos sobre a segunda opção de assunto para o trabalho final que envolve algo sobre redes, não sei exatamente, mas to deixando essa documentação de readme aqui só pra organizar a pasta e termos o contexto certo

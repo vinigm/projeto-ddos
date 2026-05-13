@@ -1,0 +1,53 @@
+# ───────────── Dados pesados (não cabem no GitHub) ─────────────
+# CSVs originais do CICIDS-2017 — baixar separadamente, ver README
+opcao2/archive/*.csv
+opcao2/archive/*.pcap
+opcao2/archive/*.pcap_ISCX.csv
+
+# Dataset pós-limpeza (regerado pelo notebook)
+opcao2/archive/*.parquet
+
+# ───────────── Material com copyright / não publicável ─────────
+# PDF do enunciado oficial (material da professora)
+Trabalho Prático - Enunciado.pdf
+
+# Template SBC (distribuído pela disciplina)
+modelosparapublicaodeartigos*.zip
+Artigo/modelosparapublicaodeartigos/
+
+# Papers de terceiros (apenas referência local)
+opcao2/Anomalias de Rede CICIDS 2017.pdf
+opcao2/Benchmarking Machine Learning Anomaly Detection.pdf
+
+# Mensagem pessoal (origem do tema)
+opcao2/mensagem_matheus.txt
+
+# Documentação interna / rascunhos — não publicar
+opcao2/contexto/
+opcao2/enunciado.txt
+opcao2/códigos/eda1.ipynb
+
+# ───────────── Ambiente Python ─────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.ipynb_checkpoints/
+
+# ───────────── macOS / IDE ─────────────
+.DS_Store
+.claude/
+.vscode/
+.idea/
+
+# ───────────── Outputs efêmeros ─────────────
+*.log
+*.tmp
+
+# ───────────── Duplicatas do Google Drive ─────────────
+*copy*.ipynb
+* copy.*
+*conflito*
