@@ -35,9 +35,17 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 
 ### 1. Pré-requisitos
 
-- Python 3.14+ (testado em 3.14.4)
+- **Python 3.10 ou superior** (testado em 3.14.4). Python 3.9 ou inferior **não funciona** — versões modernas de pandas/numpy/sklearn não têm wheels pra essas versões antigas.
 - macOS, Linux ou WSL2
 - ~3 GB de espaço livre (para os dados brutos)
+
+> ⚠️ **macOS — atenção ao Python do sistema:** O Python que vem com o Xcode Command Line Tools costuma ser 3.9. Se você nunca instalou Python explicitamente, é muito provável que esse seja o seu. Verifique com `python3 --version`. Se for < 3.10, instale uma versão nova:
+> ```bash
+> brew install python@3.11
+> python3.11 -m venv .venv
+> source .venv/bin/activate
+> ```
+> A célula de setup do notebook detecta Python antigo e mostra essa orientação automaticamente.
 
 ### 2. Clonar o repositório
 
