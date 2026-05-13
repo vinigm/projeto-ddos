@@ -15,6 +15,7 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 ├── README.md                        ← este arquivo
 ├── requirements.txt                 ← dependências Python (versões fixadas)
 ├── .gitignore
+├── artifacts/                       ← cache de modelos, scores e SHAP (ver artifacts/README.md)
 ├── opcao2/
 │   ├── readme.txt
 │   ├── códigos/
@@ -89,7 +90,17 @@ jupyter notebook opcao2/códigos/notebook_completo.ipynb
 
 O notebook é determinístico: `random_state=42` está fixo em toda fonte de aleatoriedade (split, K-Fold, modelos, RandomizedSearch, amostragem SHAP).
 
-**Tempo estimado:** ~30–60 min em uma máquina moderna (gargalo: Repeated Stratified K-Fold com 30 avaliações por modelo).
+### Sistema de cache (artifacts)
+
+O notebook salva automaticamente em `artifacts/` os objetos mais caros (modelos treinados, scores de CV, melhores hiperparâmetros, valores SHAP). Veja [artifacts/README.md](artifacts/README.md) para detalhes.
+
+| Cenário | Tempo |
+|---|---|
+| 1ª execução end-to-end (cache vazio) | ~6 horas (gargalo: Repeated Stratified K-Fold) |
+| Execuções subsequentes (cache cheio) | ~1 minuto |
+| Forçar recomputação (`RECOMPUTE=True`) | ~6 horas |
+
+Os artefatos são commitados no repositório (com `joblib compress=3`), então um `git clone` já vem com tudo pronto.
 
 ---
 
