@@ -55,20 +55,26 @@ source .venv/bin/activate          # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 4. Baixar o dataset CICIDS-2017
+### 4. Obter os dados
 
-O dataset bruto **não está versionado** (limite do GitHub). Baixe da fonte oficial:
+Existem **dois caminhos**, escolha conforme seu interesse:
 
-- **Fonte:** https://www.unb.ca/cic/datasets/ids-2017.html
-- **Arquivos necessários** (CSVs já rotulados, pasta `GeneratedLabelledFlows`):
-  - `Monday-WorkingHours.pcap_ISCX.csv`
-  - `Tuesday-WorkingHours.pcap_ISCX.csv`
-  - `Wednesday-workingHours.pcap_ISCX.csv`
-  - `Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv`
-  - `Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv`
-  - `Friday-WorkingHours-Morning.pcap_ISCX.csv`
-  - `Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv`
-  - `Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv`
+#### 🟢 Caminho rápido — apenas o pipeline de ML (recomendado)
+
+O notebook **baixa automaticamente** o dataset pré-processado (`raw_limpo.parquet`, 224 MB) do [release v1.0](https://github.com/vinigm/projeto-ddos/releases/tag/v1.0) na primeira execução. Você não precisa fazer nada manualmente.
+
+#### 🟡 Caminho completo — regenerar o parquet desde os CSVs originais
+
+Útil se você quiser auditar também a etapa de limpeza. Baixe os 8 CSVs do CICIDS-2017 da [fonte oficial UNB](https://www.unb.ca/cic/datasets/ids-2017.html) (pasta `GeneratedLabelledFlows`):
+
+- `Monday-WorkingHours.pcap_ISCX.csv`
+- `Tuesday-WorkingHours.pcap_ISCX.csv`
+- `Wednesday-workingHours.pcap_ISCX.csv`
+- `Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv`
+- `Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv`
+- `Friday-WorkingHours-Morning.pcap_ISCX.csv`
+- `Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv`
+- `Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv`
 
 Coloque todos em `opcao2/archive/`.
 
@@ -78,9 +84,12 @@ Coloque todos em `opcao2/archive/`.
 jupyter notebook opcao2/códigos/notebook_completo.ipynb
 ```
 
-Execute as células em ordem. O notebook é determinístico: `random_state=42` está fixo em toda fonte de aleatoriedade (split, K-Fold, modelos, RandomizedSearch, amostragem SHAP).
+- **Caminho rápido:** vá até a seção **"Pós EDA"** e use **"Run All Below"** (ou clique com o botão direito → "Run from this cell"). O parquet será baixado automaticamente e o pipeline de ML rodará.
+- **Caminho completo:** use **"Run All"** desde o início. Requer os 8 CSVs em `opcao2/archive/`.
 
-**Tempo estimado total:** ~30–60 min em uma máquina moderna (a etapa mais cara é o Repeated Stratified K-Fold com 30 avaliações por modelo).
+O notebook é determinístico: `random_state=42` está fixo em toda fonte de aleatoriedade (split, K-Fold, modelos, RandomizedSearch, amostragem SHAP).
+
+**Tempo estimado:** ~30–60 min em uma máquina moderna (gargalo: Repeated Stratified K-Fold com 30 avaliações por modelo).
 
 ---
 
