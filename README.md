@@ -23,8 +23,7 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 │   └── archive/
 │       ├── eda_*.png                ← figuras de EDA (geradas pelo notebook)
 │       └── interp_*.png             ← figuras de interpretabilidade (SHAP, Gini)
-└── Artigo/
-    └── Artigo_Grupo/                ← artigo científico (em construção)
+└── artigo/                       ← artigo científico (em construção)
 ```
 
 **Não versionados** (ver `.gitignore`): CSVs do CICIDS-2017 (~880 MB), `raw_limpo.parquet` (234 MB), PDFs com copyright e ambiente virtual.
