@@ -128,22 +128,3 @@ Os artefatos são commitados no repositório (com `joblib compress=3`), então u
 | Métrica principal | F1 (classe positiva = ATTACK) |
 | Métricas secundárias | Precision, Recall, ROC-AUC, Accuracy |
 | Interpretabilidade | Feature Importance (Gini) + SHAP (beeswarm + dependence plots) |
-
----
-
-## Equipe
-
-- Vinicius Guerra Maron (@vinigm)
-- Matheus (a confirmar handle)
-
----
-
-## Uso de IA generativa
-
-Este projeto utilizou ferramentas de IA generativa (Claude) como apoio nas etapas de exploração de dados, refatoração de código e redação. Conforme as diretrizes da disciplina, um material suplementar listando prompts e limitações observadas acompanhará o artigo final.
-
----
-
-## Licença
-
-Código sob MIT. Os dados do CICIDS-2017 seguem a licença da fonte original (Canadian Institute for Cybersecurity).
