@@ -16,7 +16,7 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 ├── requirements.txt                 ← dependências Python (versões fixadas)
 ├── .gitignore
 ├── artifacts/                       ← cache de modelos, scores e SHAP (ver artifacts/README.md)
-├── opcao2/
+├── projeto/
 │   ├── readme.txt
 │   ├── códigos/
 │   │   └── notebook_completo.ipynb  ← pipeline completo
@@ -85,16 +85,16 @@ O notebook **baixa automaticamente** o dataset pré-processado (`raw_limpo.parqu
 - `Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv`
 - `Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv`
 
-Coloque todos em `opcao2/archive/`.
+Coloque todos em `projeto/archive/`.
 
 ### 5. Executar o pipeline
 
 ```bash
-jupyter notebook opcao2/códigos/notebook_completo.ipynb
+jupyter notebook projeto/códigos/notebook_completo.ipynb
 ```
 
 - **Caminho rápido:** vá até a seção **"Pós EDA"** e use **"Run All Below"** (ou clique com o botão direito → "Run from this cell"). O parquet será baixado automaticamente e o pipeline de ML rodará.
-- **Caminho completo:** use **"Run All"** desde o início. Requer os 8 CSVs em `opcao2/archive/`.
+- **Caminho completo:** use **"Run All"** desde o início. Requer os 8 CSVs em `projeto/archive/`.
 
 O notebook é determinístico: `random_state=42` está fixo em toda fonte de aleatoriedade (split, K-Fold, modelos, RandomizedSearch, amostragem SHAP).
 
