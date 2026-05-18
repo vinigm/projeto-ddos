@@ -13,6 +13,10 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 ```
 .
 ├── README.md                        ← este arquivo
+├── DOCKER.md                        ← como rodar o experimento com Docker
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── requirements.txt                 ← dependências Python (versões fixadas)
 ├── .gitignore
 ├── artifacts/                       ← cache de modelos, scores e SHAP (ver artifacts/README.md)
@@ -32,6 +36,10 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 ---
 
 ## Reprodutibilidade
+
+### Docker (plug and play)
+
+Para subir **Jupyter Lab** em container (Python 3.11 e dependências fixadas), sem configurar Python no host, siga o guia **[DOCKER.md](DOCKER.md)**.
 
 ### 1. Pré-requisitos
 
