@@ -1,6 +1,6 @@
 # Artifacts — Cache de objetos computados
 
-Esta pasta armazena resultados intermediários caros do notebook (`opcao2/códigos/notebook_completo.ipynb`), permitindo que o pipeline seja reproduzido em ~1 minuto em vez de ~6 horas.
+Esta pasta armazena resultados intermediários caros do notebook (`projeto/códigos/notebook_completo.ipynb`), permitindo que o pipeline seja reproduzido em ~1 minuto em vez de ~6 horas.
 
 ## Como funciona
 
