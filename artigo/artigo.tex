@@ -1,0 +1,447 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+\sloppy
+
+% ====================================================================
+% TÍTULO E AUTORES
+% ====================================================================
+\title{Detecção de Anomalias em Tráfego de Rede com \textit{Machine Learning}:\\ Um Estudo Reprodutível no CICIDS-2017}
+
+\author{Vinícius Guerra de Mello\inst{1}, Matheus \textbf{[SOBRENOME]}\inst{1}}
+
+\address{Programa de Pós-Graduação em Computação (PPGC) -- Instituto de Informática\\
+  Universidade Federal do Rio Grande do Sul (UFRGS)\\
+  Porto Alegre -- RS -- Brasil
+  \email{\{vgmello, [matheus-email]\}@inf.ufrgs.br}
+}
+
+\begin{document}
+
+\maketitle
+
+% ====================================================================
+% ABSTRACT E RESUMO
+% ====================================================================
+\begin{abstract}
+This work presents a reproducible study of binary network anomaly detection on the CICIDS-2017 dataset. We applied a rigorous machine learning pipeline comprising exploratory data analysis, cleaning, stratified holdout split, spot-checking of five algorithms with diverse inductive biases, Repeated Stratified K-Fold cross-validation (10 folds $\times$ 3 repetitions), statistical comparison via Friedman and pairwise Wilcoxon tests with Bonferroni correction, hyperparameter tuning of the two best models, and interpretability analysis using Gini importance and SHAP. The optimized Random Forest achieved F1-score of 0.9980 on the held-out test set, with a train-test gap of 0.0005 indicating no overfitting. Reproducibility was prioritized: all code, models, intermediate artifacts, and the preprocessed dataset are publicly available, allowing full reproduction of results in approximately one minute via cached artifacts.
+\end{abstract}
+
+\begin{resumo}
+Este trabalho apresenta um estudo reprodutível de detecção binária de anomalias em tráfego de rede sobre o dataset CICIDS-2017. Aplicamos um \textit{pipeline} rigoroso de aprendizado de máquina contemplando análise exploratória, limpeza, divisão estratificada \textit{holdout}, \textit{spot-checking} de cinco algoritmos com vieses indutivos diversos, validação cruzada por \textit{Repeated Stratified K-Fold} (10 \textit{folds} $\times$ 3 repetições), comparação estatística via testes de Friedman e Wilcoxon pareado com correção de Bonferroni, otimização de hiperparâmetros dos dois melhores modelos, e análise de interpretabilidade via importância de Gini e SHAP. O Random Forest otimizado alcançou F1 de 0,9980 no conjunto de teste reservado, com diferença treino-teste de 0,0005 indicando ausência de \textit{overfitting}. Reprodutibilidade foi prioridade: todo o código, modelos, artefatos intermediários e dataset pré-processado estão publicamente disponíveis, permitindo reprodução completa em aproximadamente um minuto via \textit{cache} de artefatos.
+\end{resumo}
+
+
+% ====================================================================
+% 1. INTRODUÇÃO
+% ====================================================================
+\section{Introdução}
+\label{sec:intro}
+
+% TODO: Refinar parágrafo de motivação e contexto
+A detecção de tráfego malicioso em redes de computadores é um problema central em cibersegurança. Sistemas de detecção de intrusão (IDS) baseados em assinatura têm limitações claras frente a ataques novos ou ofuscados, motivando o uso de abordagens estatísticas e de aprendizado de máquina (AM) capazes de generalizar para padrões não vistos \textit{[CITAR REFERÊNCIA]}.
+
+O dataset CICIDS-2017 \cite{sharafaldin2018toward}, gerado pelo \textit{Canadian Institute for Cybersecurity} (UNB), é um \textit{benchmark} amplamente utilizado para esse problema. Ele apresenta tráfego rotulado coletado durante cinco dias em um ambiente de \textit{testbed} controlado, contendo cerca de 2,8 milhões de fluxos com 78 \textit{features} estatísticas extraídas pelo \textit{CICFlowMeter}.
+
+\textbf{Pergunta de pesquisa.} Quais algoritmos de AM apresentam melhor desempenho na detecção binária de tráfego malicioso no CICIDS-2017, considerando o desbalanceamento severo de classes, e quais atributos mais contribuem para essa detecção?
+
+\textbf{Contribuições.} Este trabalho contribui com: (i) um \textit{pipeline} completo e reprodutível de AM para o problema, com seeds fixadas e artefatos versionados; (ii) avaliação rigorosa via \textit{Repeated Stratified K-Fold} acompanhada de teste estatístico; (iii) análise de interpretabilidade combinando importância de Gini e SHAP; (iv) discussão crítica das limitações inerentes ao \textit{benchmark}.
+
+O restante do artigo está organizado como segue. A Seção~\ref{sec:related} apresenta trabalhos relacionados. A Seção~\ref{sec:methods} descreve a metodologia. A Seção~\ref{sec:results} reporta os resultados. A Seção~\ref{sec:reproducibility} detalha decisões de reprodutibilidade. A Seção~\ref{sec:discussion} discute achados, limitações e trabalhos futuros. A Seção~\ref{sec:conclusion} conclui.
+
+
+% ====================================================================
+% 2. TRABALHOS RELACIONADOS
+% ====================================================================
+\section{Trabalhos Relacionados}
+\label{sec:related}
+
+% TODO: 2-3 parágrafos. Sugestões:
+% - Sharafaldin et al. 2018 - o paper do dataset CICIDS-2017
+% - Trabalhos que aplicaram ML em CICIDS-2017
+% - Trabalhos sobre interpretabilidade em IDS (SHAP em segurança)
+
+\textit{[A preencher: 2-3 parágrafos comparando com trabalhos que aplicaram ML em CICIDS-2017 ou outros datasets de IDS. Citar Sharafaldin et al. para o dataset, trabalhos de detecção binária e multiclasse, e mencionar se algum reportou interpretabilidade.]}
+
+Trabalhos prévios sobre CICIDS-2017 reportam alto desempenho com modelos baseados em árvores~\cite{[citacao]}, mas a maioria não conduz validação estatística entre algoritmos nem análise de \textit{overfitting} explícita. Este trabalho preenche essas lacunas.
+
+
+% ====================================================================
+% 3. MATERIAIS E MÉTODOS
+% ====================================================================
+\section{Materiais e Métodos}
+\label{sec:methods}
+
+\subsection{Conjunto de Dados}
+\label{sec:dataset}
+
+Utilizamos o CICIDS-2017~\cite{sharafaldin2018toward}, disponível em \url{https://www.unb.ca/cic/datasets/ids-2017.html}. O dataset consiste em oito arquivos CSV (um por dia/ataque), totalizando 2.827.761 fluxos com 78 \textit{features} numéricas e uma coluna de rótulo (\texttt{Label}) contendo a categoria do tráfego (BENIGN ou um dentre 14 tipos de ataque, incluindo DDoS, PortScan, DoS Hulk, FTP-Patator, SSH-Patator, entre outros).
+
+A distribuição original é severamente desbalanceada: 80,3\% BENIGN e 19,7\% ATTACK quando agregamos os tipos de ataque (Figura~\ref{fig:dist-classes}). Entre as classes de ataque, há grande disparidade: classes raras como \texttt{Heartbleed} (7 amostras) e \texttt{Web\_Attack\_Sql\_Injection} (21 amostras) tornariam a formulação multiclasse intratável (Figura~\ref{fig:tipos-ataque}).
+
+\textbf{Formulação binária.} Dada a inviabilidade de aprender classes com $<$40 amostras dentro do prazo do projeto, agregamos todos os ataques em uma única classe ATTACK e formulamos a tarefa como classificação binária (BENIGN vs. ATTACK). Reconhecemos que essa decisão perde a granularidade do tipo de ataque (Seção~\ref{sec:limitations}).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.7\textwidth]{figuras/eda_01_distribuicao_classes.png}
+\caption{Distribuição binária das classes após agregação (BENIGN vs. ATTACK).}
+\label{fig:dist-classes}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.7\textwidth]{figuras/eda_02_tipos_ataque.png}
+\caption{Distribuição original dos 14 tipos de ataque mais a classe BENIGN. Classes raras tornariam a formulação multiclasse intratável.}
+\label{fig:tipos-ataque}
+\end{figure}
+
+\subsection{Análise Exploratória e Pré-processamento}
+\label{sec:eda}
+
+A análise exploratória identificou os seguintes problemas, todos tratados antes da modelagem:
+
+\begin{itemize}
+  \item \textbf{Duplicatas:} 255.234 linhas duplicadas (9,03\% do total), removidas.
+  \item \textbf{Valores infinitos:} colunas \texttt{Flow Bytes/s} e \texttt{Flow Packets/s} contendo $\pm\infty$ por divisão por zero, convertidos para NaN e removidos.
+  \item \textbf{Variância zero:} oito \textit{features} com valor constante em 100\% das linhas (todas as \texttt{*\_Avg\_Bulk\_*}, \texttt{Bwd PSH Flags}, \texttt{Bwd URG Flags}), removidas.
+  \item \textbf{Coluna duplicada:} \texttt{Fwd Header Length.1} idêntica a \texttt{Fwd Header Length}, removida.
+  \item \textbf{Alta correlação:} aplicamos remoção iterativa para pares com $|r| \geq 0{,}95$, eliminando 23 \textit{features} redundantes adicionais.
+  \item \textbf{Outliers:} tratados via método IQR (\textit{Interquartile Range}) com supressão suave nos extremos.
+\end{itemize}
+
+Após a limpeza, restaram \textbf{47 features numéricas} sobre 2.521.519 fluxos para a modelagem.
+
+\subsection{Estratégia de Avaliação}
+\label{sec:eval-strategy}
+
+A estratégia de avaliação foi desenhada para combinar eficiência de triagem com rigor estatístico (Figura~\ref{fig:pipeline}).
+
+\textbf{Divisão dos dados.} Aplicamos \textit{holdout} estratificado 80/20 com \texttt{random\_state=42}, preservando a proporção BENIGN/ATTACK em ambos os conjuntos. O conjunto de teste foi mantido isolado de todas as etapas subsequentes (treinamento, validação cruzada, otimização de hiperparâmetros), sendo utilizado apenas na avaliação final.
+
+\textbf{Etapa 1 -- Spot-checking.} Treinamos cinco algoritmos com hiperparâmetros padrão sobre o conjunto de treino e avaliamos no conjunto de teste, obtendo uma triagem inicial dos modelos mais promissores.
+
+\textbf{Etapa 2 -- Validação cruzada rigorosa.} Os mesmos cinco algoritmos foram avaliados via \textit{Repeated Stratified K-Fold} com $k=10$ \textit{folds} e três repetições (totalizando 30 avaliações por modelo), exclusivamente sobre o conjunto de treino. Esse esquema fornece estimativas robustas de média e desvio padrão para cada métrica.
+
+\textbf{Etapa 3 -- Teste estatístico.} Aplicamos o teste de Friedman como teste \textit{omnibus} sobre os 30 \textit{scores} de cada modelo, seguido de testes pareados de Wilcoxon com correção de Bonferroni para identificar quais pares de modelos diferem significativamente.
+
+\textbf{Etapa 4 -- Otimização de hiperparâmetros.} Para os dois modelos mais promissores (identificados nas etapas anteriores), aplicamos \texttt{RandomizedSearchCV} com 20 amostragens de combinações de hiperparâmetros e \textit{StratifiedKFold} interno de 5 \textit{folds}. Por viabilidade computacional, a busca foi conduzida sobre uma amostra estratificada de 20\% do conjunto de treino; o modelo vencedor foi posteriormente retreinado no conjunto de treino completo.
+
+\textbf{Etapa 5 -- Avaliação final.} O modelo otimizado retreinado foi avaliado no conjunto de teste reservado, fornecendo a estimativa de desempenho em produção.
+
+% TODO: Substituir por figura real do pipeline (se você tiver o diagrama)
+% \begin{figure}[ht]
+% \centering
+% \includegraphics[width=.9\textwidth]{figuras/pipeline_metodologia.png}
+% \caption{Visão geral do pipeline de avaliação.}
+% \label{fig:pipeline}
+% \end{figure}
+
+\subsection{Algoritmos}
+\label{sec:algorithms}
+
+Selecionamos cinco algoritmos com vieses indutivos distintos, conforme recomendado pela literatura sobre \textit{spot-checking}:
+
+\begin{itemize}
+  \item \textbf{Regressão Logística (LR):} fronteira linear no espaço de \textit{features} padronizadas (\texttt{StandardScaler}); \texttt{class\_weight=balanced}, \texttt{max\_iter=1000}.
+  \item \textbf{Random Forest (RF):} \textit{ensemble} de árvores via \textit{bagging}; \texttt{n\_estimators=100}, \texttt{class\_weight=balanced}.
+  \item \textbf{Decision Tree (DT):} particionamento recursivo; \texttt{class\_weight=balanced}.
+  \item \textbf{Hist Gradient Boosting (HGB):} \textit{boosting} sequencial com \textit{histogram binning}; \texttt{class\_weight=balanced}.
+  \item \textbf{Gaussian Naive Bayes (NB):} probabilístico com independência condicional.
+\end{itemize}
+
+\textbf{Métrica principal.} Adotamos F1-\textit{score} da classe positiva (ATTACK) como critério principal de seleção de modelos. Em um cenário de classes desbalanceadas (80/20), a \textit{accuracy} é enganosa --- um classificador trivial que prediz tudo como BENIGN atinge \textit{accuracy} de 80\%, mas F1 da classe ATTACK igual a zero. Métricas complementares: \textit{Precision}, \textit{Recall}, ROC-AUC e \textit{Accuracy}.
+
+\textbf{Balanceamento.} Optamos por \texttt{class\_weight=balanced} em vez de \textit{oversampling} sintético (SMOTE) ou \textit{undersampling}. A ponderação por classe ajusta a função de perda durante o treinamento sem alterar a distribuição original dos dados, evitando geração de amostras sintéticas que poderiam introduzir artefatos.
+
+\subsection{Otimização de Hiperparâmetros}
+\label{sec:tuning}
+
+Para os dois melhores modelos identificados nas etapas de \textit{spot-checking} e validação cruzada, aplicamos \texttt{RandomizedSearchCV} com os seguintes espaços de busca:
+
+\textbf{Random Forest:} \texttt{n\_estimators} $\in \{100, 200, 300, 500\}$, \texttt{max\_depth} $\in \{10, 20, 30, \text{None}\}$, \texttt{min\_samples\_leaf} $\in \{1, 2, 5, 10\}$, \texttt{max\_features} $\in \{$\texttt{"sqrt"}, \texttt{"log2"}$, 0{,}3\}$.
+
+\textbf{Hist Gradient Boosting:} \texttt{max\_iter} $\in \{100, 200, 300, 500\}$, \texttt{learning\_rate} $\in \{0{,}01, 0{,}05, 0{,}1, 0{,}2\}$, \texttt{max\_depth} $\in \{3, 5, 7, \text{None}\}$, \texttt{min\_samples\_leaf} $\in \{20, 50, 100, 200\}$, \texttt{l2\_regularization} $\in \{0{,}0, 0{,}1, 0{,}5, 1{,}0\}$.
+
+A busca utilizou 20 amostragens com \texttt{StratifiedKFold} de 5 \textit{folds} sobre amostra estratificada de 20\% do conjunto de treino, otimizando o F1 da classe positiva.
+
+\subsection{Análise de Interpretabilidade}
+\label{sec:interpretability}
+
+Para o modelo final selecionado, aplicamos duas técnicas complementares:
+
+\begin{itemize}
+  \item \textbf{Importância por Gini:} extraída diretamente do \textit{Random Forest} via redução média de impureza ao longo das árvores.
+  \item \textbf{SHAP (SHapley Additive exPlanations)~\cite{lundberg2017unified}:} valores SHAP exatos via \texttt{TreeExplainer}, computados sobre amostra estratificada de 5.000 instâncias do conjunto de teste.
+\end{itemize}
+
+A convergência das duas técnicas no \textit{ranking} de \textit{features} fornece evidência adicional de robustez metodológica.
+
+
+% ====================================================================
+% 4. RESULTADOS
+% ====================================================================
+\section{Resultados}
+\label{sec:results}
+
+\subsection{Spot-checking Inicial}
+\label{sec:results-spotcheck}
+
+A Tabela~\ref{tab:spotcheck} apresenta o desempenho dos cinco algoritmos no \textit{holdout} de teste. Random Forest e Hist Gradient Boosting destacam-se como os candidatos mais promissores, com F1 da classe ATTACK acima de 0,997. Naive Bayes apresenta o pior desempenho (F1 = 0,5744), confirmando que a premissa de independência condicional é fortemente violada pelas \textit{features} do CICFlowMeter, que possuem correlações conhecidas (médias, máximos e mínimos de tamanhos de pacote, IATs, etc.).
+
+\begin{table}[ht]
+\centering
+\caption{Spot-checking inicial -- desempenho dos cinco algoritmos no conjunto de teste (\textit{holdout}). Métricas reportadas para a classe positiva (ATTACK).}
+\label{tab:spotcheck}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Modelo} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Attack} & \textbf{ROC-AUC} \\
+\midrule
+Regressão Logística    & 0,9405 & 0,7890 & 0,9528 & 0,8632 & 0,9816 \\
+Random Forest          & 0,9989 & 0,9973 & 0,9972 & 0,9972 & 0,9998 \\
+Árvore de Decisão      & 0,9989 & 0,9971 & 0,9971 & 0,9971 & 0,9982 \\
+Hist Gradient Boosting & 0,9990 & 0,9955 & 0,9996 & 0,9975 & 0,9999 \\
+Naive Bayes            & 0,8645 & 0,7526 & 0,4645 & 0,5744 & 0,7268 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Validação Cruzada Rigorosa}
+\label{sec:results-cv}
+
+A Tabela~\ref{tab:cv} reporta os resultados do \textit{Repeated Stratified K-Fold} (30 \textit{folds}) sobre o conjunto de treino. Random Forest, Decision Tree e Hist Gradient Boosting apresentam desempenho praticamente idêntico, com F1 acima de 0,996 e desvios padrão extremamente baixos ($\leq$ 0,0004), indicando alta estabilidade do modelo entre diferentes partições dos dados.
+
+\begin{table}[ht]
+\centering
+\caption{Resultados da validação cruzada \textit{Repeated Stratified K-Fold} (10 \textit{folds} $\times$ 3 repetições). Valores: média $\pm$ desvio padrão sobre as 30 avaliações.}
+\label{tab:cv}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Modelo} & \textbf{F1-Attack} & \textbf{Precision} & \textbf{Recall} & \textbf{ROC-AUC} \\
+\midrule
+Regressão Logística    & 0,8640 $\pm$ 0,0012 & 0,7905 $\pm$ 0,0019 & 0,9527 $\pm$ 0,0011 & 0,9818 $\pm$ 0,0003 \\
+Random Forest          & \textbf{0,9973 $\pm$ 0,0001} & 0,9972 $\pm$ 0,0002 & 0,9974 $\pm$ 0,0002 & 0,9998 $\pm$ 0,0000 \\
+Decision Tree          & 0,9971 $\pm$ 0,0001 & 0,9967 $\pm$ 0,0003 & 0,9975 $\pm$ 0,0003 & 0,9984 $\pm$ 0,0001 \\
+Hist Gradient Boosting & 0,9969 $\pm$ 0,0004 & 0,9942 $\pm$ 0,0008 & 0,9996 $\pm$ 0,0001 & 0,9999 $\pm$ 0,0000 \\
+Naive Bayes            & 0,5753 $\pm$ 0,0024 & 0,7531 $\pm$ 0,0029 & 0,4654 $\pm$ 0,0022 & 0,7265 $\pm$ 0,0013 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Teste Estatístico}
+\label{sec:results-stats}
+
+O teste de Friedman sobre F1 das 30 avaliações por modelo rejeitou a hipótese nula de equivalência entre os cinco modelos com $p < 0{,}001$, indicando que existe diferença estatisticamente significativa entre pelo menos um par de modelos.
+
+Os testes pareados de Wilcoxon com correção de Bonferroni ($\alpha = 0{,}05 / 10 = 0{,}005$) confirmaram que Logistic Regression e Naive Bayes são significativamente inferiores aos três modelos baseados em árvore (RF, DT, HGB), enquanto estes três não diferem significativamente entre si.
+
+\textbf{Implicação metodológica:} embora o RF apresente a maior média de F1, sua vantagem sobre DT e HGB não é estatisticamente significativa --- a diferença entre eles está dentro do ruído experimental.
+
+\subsection{Otimização de Hiperparâmetros}
+\label{sec:results-tuning}
+
+A Tabela~\ref{tab:hyperparams} reporta os hiperparâmetros selecionados pelo \texttt{RandomizedSearchCV}. Para o RF, a busca encontrou \texttt{max\_depth=30}, \texttt{min\_samples\_leaf=5}, \texttt{max\_features=0,3}, \texttt{n\_estimators=100}, com F1 de validação cruzada de 0,9974. Para o HGB, os parâmetros selecionados foram \texttt{max\_iter=500}, \texttt{learning\_rate=0,1}, \texttt{max\_depth=None}, \texttt{min\_samples\_leaf=20}, \texttt{l2\_regularization=0,1}, com F1 de 0,9972.
+
+\begin{table}[ht]
+\centering
+\caption{Hiperparâmetros selecionados pelo \texttt{RandomizedSearchCV} (20 amostragens, 5-\textit{fold} CV em 20\% do treino).}
+\label{tab:hyperparams}
+\begin{tabular}{lll}
+\toprule
+\textbf{Modelo} & \textbf{Hiperparâmetro} & \textbf{Valor Selecionado} \\
+\midrule
+\multirow{4}{*}{Random Forest}
+ & n\_estimators       & 100 \\
+ & max\_depth          & 30 \\
+ & min\_samples\_leaf  & 5 \\
+ & max\_features       & 0,3 \\
+\midrule
+\multirow{5}{*}{Hist Gradient Boosting}
+ & max\_iter           & 500 \\
+ & learning\_rate      & 0,1 \\
+ & max\_depth          & None \\
+ & min\_samples\_leaf  & 20 \\
+ & l2\_regularization  & 0,1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A Tabela~\ref{tab:baseline-vs-opt} compara o desempenho dos modelos \textit{baseline} e otimizados no conjunto de teste final. Os ganhos com a otimização foram marginais (RF: $+0{,}0008$ em F1; HGB: $+0{,}0004$), sugerindo que o desempenho \textit{baseline} já se aproximava de um teto natural para esta formulação binária do problema.
+
+\begin{table}[ht]
+\centering
+\caption{Comparação \textit{baseline} vs. otimizado no conjunto de teste (\textit{holdout}).}
+\label{tab:baseline-vs-opt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Modelo} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Attack} & \textbf{ROC-AUC} \\
+\midrule
+RF Baseline      & 0,9973 & 0,9972 & 0,9972 & 0,9998 \\
+RF Otimizado     & 0,9968 & 0,9992 & 0,9980 & 0,9999 \\
+HGB Baseline     & 0,9955 & 0,9996 & 0,9975 & 0,9999 \\
+HGB Otimizado    & 0,9961 & 0,9997 & 0,9979 & 1,0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Validação contra \textit{Overfitting}}
+\label{sec:results-overfitting}
+
+Para verificar a ausência de \textit{overfitting}, comparamos o F1 nos conjuntos de treino e teste para todos os modelos avaliados (Tabela~\ref{tab:overfitting}). O \textit{gap} entre F1 de treino e teste é menor que 0,25\% em todos os casos, e o modelo final (\textbf{RF Otimizado}) apresenta \textit{gap} de apenas $+0{,}0005$ --- evidência forte de que o modelo generaliza bem.
+
+\begin{table}[ht]
+\centering
+\caption{Comparação F1 treino vs. teste como diagnóstico de \textit{overfitting}.}
+\label{tab:overfitting}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modelo} & \textbf{F1 Treino} & \textbf{F1 Teste} & \textbf{Gap} \\
+\midrule
+Logistic Regression    & 0,8643 & 0,8632 & $+0{,}0010$ \\
+Random Forest baseline & 0,9994 & 0,9972 & $+0{,}0022$ \\
+Decision Tree          & 0,9994 & 0,9971 & $+0{,}0023$ \\
+HGB baseline           & 0,9975 & 0,9975 & $+0{,}0000$ \\
+Naive Bayes            & 0,5753 & 0,5744 & $+0{,}0009$ \\
+\midrule
+\textbf{RF Otimizado}  & \textbf{0,9985} & \textbf{0,9980} & $\mathbf{+0{,}0005}$ \\
+HGB Otimizado          & 0,9980 & 0,9979 & $+0{,}0000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cabe observar que a otimização do RF reduziu o \textit{gap} de $+0{,}0022$ (\textit{baseline}) para $+0{,}0005$ (otimizado), confirmando que os parâmetros \texttt{max\_depth=30} e \texttt{min\_samples\_leaf=5} atuaram como regularizadores efetivos.
+
+\subsection{Interpretabilidade do Modelo Final}
+\label{sec:results-interpretability}
+
+A Figura~\ref{fig:gini} apresenta a importância das \textit{features} por redução de impureza de Gini para o Random Forest Otimizado, enquanto a Figura~\ref{fig:shap-beeswarm} mostra os valores SHAP em formato \textit{beeswarm}. As duas técnicas convergem nas cinco \textit{features} mais relevantes: \texttt{Destination Port}, \texttt{Average Packet Size}, \texttt{Bwd Packet Length Min}, \texttt{Init\_Win\_bytes\_backward} e \texttt{Bwd Packet Length Std}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.85\textwidth]{figuras/interp_01_feature_importance_gini.png}
+\caption{Importância das \textit{features} por Gini -- Random Forest Otimizado.}
+\label{fig:gini}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=.85\textwidth]{figuras/interp_02_shap_beeswarm.png}
+\caption{Distribuição de valores SHAP para o modelo final (\textit{beeswarm plot}). Cada ponto representa uma instância; cor indica valor original da \textit{feature} (azul = baixo, vermelho = alto).}
+\label{fig:shap-beeswarm}
+\end{figure}
+
+\textbf{Interpretação dos resultados:}
+
+\begin{itemize}
+  \item \texttt{Destination Port} é a \textit{feature} dominante --- consistente com o fato de que muitos ataques visam portas específicas conhecidas (SSH, FTP, HTTP/HTTPS).
+  \item \texttt{Init\_Win\_bytes\_backward/forward} (tamanho da janela TCP no \textit{handshake}) capturam diferenças no estabelecimento de conexão entre tráfego legítimo e malicioso.
+  \item Estatísticas de tamanho de pacote (\texttt{Average Packet Size}, \texttt{Bwd Packet Length Min/Std}) refletem padrões de \textit{payload}: ataques como DDoS tendem a apresentar pacotes mais uniformes que tráfego legítimo.
+\end{itemize}
+
+A convergência entre Gini e SHAP nas mesmas \textit{features} fornece evidência de robustez da análise --- não dependemos de artefatos de uma única técnica.
+
+
+% ====================================================================
+% 5. REPRODUTIBILIDADE
+% ====================================================================
+\section{Reprodutibilidade}
+\label{sec:reproducibility}
+
+A reprodutibilidade foi tratada como critério de projeto desde a concepção. Adotamos as seguintes práticas:
+
+\textbf{Código e dados publicamente disponíveis.} Todo o código-fonte está hospedado em \url{https://github.com/vinigm/projeto-ddos}, com documentação completa e licença permissiva. O dataset pré-processado (\texttt{raw\_limpo.parquet}, 224 MB) está disponível como \textit{release asset} do mesmo repositório, sendo baixado automaticamente pelo \textit{notebook} caso não esteja presente localmente.
+
+\textbf{Determinismo.} Todas as fontes de aleatoriedade do \textit{pipeline} utilizam \texttt{random\_state=42}, incluindo: divisão treino/teste, \texttt{RepeatedStratifiedKFold}, instâncias dos modelos, \texttt{RandomizedSearchCV}, amostragem para SHAP. Execuções repetidas produzem resultados idênticos a menos de variações de ponto flutuante entre arquiteturas.
+
+\textbf{Versionamento de dependências.} O arquivo \texttt{requirements.txt} fixa as versões exatas de \texttt{pandas} (3.0.2), \texttt{numpy} (2.4.4), \texttt{scikit-learn} (1.8.0), \texttt{shap} (0.51.0), entre outras. A primeira célula do \textit{notebook} executa \texttt{pip install} automaticamente.
+
+\textbf{Verificação de ambiente.} O \textit{notebook} verifica se o Python instalado é versão 3.10 ou superior, exibindo mensagem de erro com instruções caso contrário.
+
+\textbf{Cache de artefatos.} Os resultados intermediários computacionalmente caros --- \textit{scores} do CV (30 \textit{folds} $\times$ 5 modelos), modelos treinados, melhores hiperparâmetros, valores SHAP --- são serializados em \texttt{artifacts/} e versionados no repositório. Em uma primeira execução completa, o \textit{pipeline} consome aproximadamente 6 horas (gargalo: \textit{Repeated Stratified K-Fold} com 150 ajustes). Execuções subsequentes, com os artefatos em cache, completam em aproximadamente um minuto. Esse mecanismo permite que um revisor reproduza todos os números e figuras do artigo sem incorrer no custo computacional original.
+
+\textbf{Auditabilidade.} A reexecução completa pode ser forçada definindo a \textit{flag} \texttt{RECOMPUTE = True} no \textit{notebook}.
+
+
+% ====================================================================
+% 6. DISCUSSÃO
+% ====================================================================
+\section{Discussão}
+\label{sec:discussion}
+
+\subsection{Modelo Recomendado}
+
+Selecionamos o \textbf{Random Forest Otimizado} como modelo final do trabalho, com base em três critérios:
+
+\begin{enumerate}
+  \item \textbf{Melhor F1 no conjunto de teste:} 0,9980, marginalmente superior ao HGB Otimizado (0,9979).
+  \item \textbf{Maior estabilidade na validação cruzada:} desvio padrão de 0,0001 vs. 0,0004 do HGB --- quatro vezes mais consistente entre \textit{folds}.
+  \item \textbf{Interpretabilidade nativa:} o \texttt{TreeExplainer} do SHAP fornece valores \textit{exatos} para \textit{Random Forests}, sem aproximações.
+\end{enumerate}
+
+É importante destacar que, do ponto de vista estatístico, RF, DT e HGB são equivalentes na validação cruzada. A escolha do RF representa um compromisso entre desempenho marginalmente superior, estabilidade e interpretabilidade. Em um cenário com restrições severas de memória ou latência de inferência, o HGB Otimizado (399 KB vs. 8,8 MB do RF) seria uma alternativa defensável.
+
+\subsection{O Tuning Trouxe Ganho Marginal}
+
+A diferença entre os modelos \textit{baseline} e otimizados foi de aproximadamente $+0{,}0008$ em F1. Esse achado é em si informativo: sugere que a formulação binária do problema, com as 47 \textit{features} disponíveis após seleção, atinge um teto natural de desempenho próximo de F1 = 0,997 --- independente de ajuste fino. O \textit{ensembling} (RF) e o \textit{boosting} (HGB) já operam próximo do limite informativo dos dados.
+
+\subsection{Limitações}
+\label{sec:limitations}
+
+Apesar do rigor metodológico, este trabalho apresenta limitações importantes que merecem destaque:
+
+\begin{enumerate}
+  \item \textbf{Avaliação final em \textit{holdout} único.} A avaliação no conjunto de teste foi feita uma única vez, sem repetição. O CV no conjunto de treino fornece estimativa indireta de variância, mas o ideal teórico seria validação cruzada aninhada (\textit{nested CV}), inviabilizada pelo custo computacional.
+
+  \item \textbf{Otimização em amostra de 20\% do treino.} O \texttt{RandomizedSearchCV} foi conduzido em subconjunto estratificado de 20\% por viabilidade. Hiperparâmetros ótimos para a amostra podem não ser ótimos para o conjunto completo, embora o retreino final tenha sido realizado sobre todo o conjunto de treino.
+
+  \item \textbf{Formulação binária.} A agregação dos 14 tipos de ataque em uma classe ATTACK perde informação valiosa para resposta a incidentes em IDS de produção, onde identificar o tipo de ataque (DDoS, exfiltração, varredura, etc.) é crítico.
+
+  \item \textbf{Generalização não testada.} Os experimentos foram realizados exclusivamente no CICIDS-2017, gerado em ambiente de \textit{testbed} laboratorial. Não há garantia de que os padrões aprendidos generalizem para tráfego de redes corporativas reais ou outros \textit{datasets} de IDS.
+
+  \item \textbf{Ausência de validação temporal.} Utilizamos \textit{split} estratificado aleatório, ignorando a estrutura temporal natural dos dados (cinco dias consecutivos). Em cenários de produção, \textit{concept drift} é uma preocupação real --- ataques novos surgem ao longo do tempo.
+\end{enumerate}
+
+\subsection{Trabalhos Futuros}
+
+\begin{itemize}
+  \item \textbf{Formulação multiclasse hierárquica:} primeiro classificar BENIGN vs. ATTACK; em seguida, classificar o tipo específico de ataque sobre a sub-amostra de ataques detectados. Lida com o desbalanceamento extremo das classes raras de forma estruturada.
+  \item \textbf{Validação temporal:} treinar nos dias iniciais (Mon-Wed) e testar nos finais (Thu-Fri), avaliando o desempenho frente a \textit{concept drift} natural.
+  \item \textbf{Avaliação \textit{cross-dataset}:} treinar no CICIDS-2017 e avaliar em CICIDS-2018 ou UNSW-NB15, verificando generalização entre \textit{benchmarks} distintos.
+  \item \textbf{Comparação com técnicas de balanceamento:} contrastar \texttt{class\_weight=balanced} com SMOTE, \textit{undersampling} e métodos híbridos, especialmente relevante em uma formulação multiclasse.
+\end{itemize}
+
+
+% ====================================================================
+% 7. CONCLUSÃO
+% ====================================================================
+\section{Conclusão}
+\label{sec:conclusion}
+
+Este trabalho apresentou um estudo reprodutível de detecção binária de anomalias em tráfego de rede no CICIDS-2017. O \textit{pipeline} proposto contempla análise exploratória rigorosa, pré-processamento documentado, avaliação por validação cruzada repetida estratificada acompanhada de teste estatístico, otimização de hiperparâmetros e análise de interpretabilidade. O modelo final --- Random Forest Otimizado --- atinge F1 de 0,9980 com diferença treino-teste de apenas 0,0005, evidência forte de boa generalização. As \textit{features} mais discriminativas (\texttt{Destination Port}, \texttt{Average Packet Size}, \texttt{Init\_Win\_bytes}) foram identificadas de forma convergente por técnicas distintas (Gini e SHAP).
+
+Mais relevante que o desempenho específico do modelo, este trabalho contribui com um \textit{template} metodológico replicável: todo o código, dados e artefatos estão publicamente disponíveis, permitindo reprodução em aproximadamente um minuto. Acreditamos que esse nível de transparência é particularmente relevante em segurança de redes, onde a confiança em modelos preditivos depende da capacidade de auditá-los.
+
+
+% ====================================================================
+% AGRADECIMENTOS (opcional)
+% ====================================================================
+\section*{Agradecimentos}
+% TODO: Mencionar uso de IA generativa conforme exigência do enunciado
+Este trabalho utilizou ferramentas de IA generativa (Claude) como apoio nas etapas de exploração de dados, refatoração de código e redação. Material suplementar contendo prompts utilizados e limitações observadas acompanha esta submissão.
+
+
+% ====================================================================
+% REFERÊNCIAS
+% ====================================================================
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}

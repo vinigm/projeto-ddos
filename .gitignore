@@ -47,6 +47,18 @@ __pycache__/
 *.log
 *.tmp
 
+# ───────────── Arquivos auxiliares do LaTeX (gerados a cada compile) ─────────────
+artigo/*.aux
+artigo/*.bbl
+artigo/*.blg
+artigo/*.out
+artigo/*.toc
+artigo/*.lof
+artigo/*.lot
+artigo/*.fls
+artigo/*.fdb_latexmk
+artigo/*.synctex.gz
+
 # ───────────── Duplicatas do Google Drive ─────────────
 *copy*.ipynb
 * copy.*
