@@ -40,8 +40,20 @@ __pycache__/
 # ───────────── macOS / IDE ─────────────
 .DS_Store
 .claude/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
+
+# ───────────── LaTeX (artigo/artgigo.tex) ─────────────
+artigo/artgigo.aux
+artigo/artgigo.bbl
+artigo/artgigo.blg
+artigo/artgigo.fdb_latexmk
+artigo/artgigo.fls
+artigo/artgigo.log
+artigo/artgigo.out
+artigo/artgigo.synctex.gz
+artigo/artgigo.pdf
 
 # ───────────── Outputs efêmeros ─────────────
 *.log

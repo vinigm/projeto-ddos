@@ -1,0 +1,240 @@
+\documentclass[12pt]{article}
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+
+\sloppy
+
+\title{Malicious Traffic Detection in CICIDS-2017 Using Machine Learning}
+
+\author{Matheus Fraga Cardoso, Vinícius Guerra de Mello}
+
+\address{Programa de Pós-Graduação em Computação (PPGC) -- Universidade Federal do Rio Grande do Sul (UFRGS)\\
+Porto Alegre -- RS -- Brasil
+}
+
+\begin{document}
+
+\begin{abstract}
+
+\end{abstract}
+
+\begin{resumo}
+
+\end{resumo}
+
+\section{Introduction}
+
+A detecção de tráfego malicioso é um problema central em cibersegurança.
+Segundo o \textit{Verizon Data Breach Investigations Report} (DBIR) de 2026~\cite{verizon2026dbir}, os maiores ataques distribuídos de negação de serviço (DDoS) apresentaram crescimento de 198\% no volume de bits por segundo; a exploração de vulnerabilidades tornou-se o principal vetor inicial de invasão, representando 31\% das violações registradas e crescimento de 55\% em relação ao período anterior; e o uso de inteligência artificial por agentes maliciosos acelera a descoberta de falhas, automatiza a exploração de vulnerabilidades e potencializa etapas dos ataques cibernéticos, aumentando a complexidade dos mecanismos tradicionais de defesa.
+
+Nesse cenário, os sistemas de detecção de intrusão (IDS) baseados em assinatura dependem de padrões conhecidos e bem definidos, mas apresentam limitações claras frente a ataques novos ou ofuscados, o que motiva abordagens estatísticas e de aprendizado de máquina (AM) capazes de generalizar para padrões não vistos.
+Além disso, abordagens baseadas em AM enfrentam desafios adicionais, como a escassez de \textit{datasets} de referência publicamente disponíveis e o envelhecimento rápido desses \textit{benchmarks} à medida que as tecnologias de rede evoluem~\cite{he2023adversarial}.
+
+Nesse contexto, este trabalho treina modelos de aprendizado de máquina para detecção binária de tráfego malicioso, a fim de obter classificadores capazes de distinguir tráfego legítimo e malicioso e de generalizar para ataques novos ou ofuscados, superando as limitações das abordagens por assinatura e mitigando os efeitos do envelhecimento de \textit{datasets}.
+Para isso, utiliza o conjunto de dados CICIDS-2017~\cite{sharafaldin2018toward}, amplamente adotado como \textit{benchmark} de detecção de intrusão, com 14 tipos de ataques rotulados e mais de 2 milhões de amostras de fluxos de rede.
+Este trabalho também explora a interpretabilidade dos modelos treinados e a reprodutibilidade dos experimentos propostos.
+
+As principais contribuições deste trabalho são: (i) comparação sistemática de cinco classificadores para detecção binária no CICIDS-2017; (ii) análise de interpretabilidade do melhor modelo (SHAP, importância de atributos); (iii) pipeline reproduzível (código/Docker).
+
+O restante deste artigo está organizado da seguinte forma.
+A Seção~\ref{sec:related} revisa trabalhos relacionados à detecção de intrusão com aprendizado de máquina.
+A Seção~\ref{sec:methodology} descreve a metodologia, incluindo o \textit{dataset}, o pré-processamento, o \textit{pipeline} de treinamento, as métricas de avaliação, a interpretabilidade dos modelos e a reprodutibilidade dos experimentos.
+A Seção~\ref{sec:experiments} apresenta os experimentos e os resultados obtidos.
+A Seção~\ref{sec:discussion} discute os achados e limitações do estudo.
+Por fim, a Seção~\ref{sec:conclusion} apresenta as conclusões e perspectivas de trabalhos futuros.
+
+\section{Related Work}
+\label{sec:related}
+
+A literatura sobre detecção de intrusão baseada em aprendizado de máquina (AM) consolidou o uso de \textit{benchmarks} públicos de tráfego rotulado para comparar classificadores e relatórios de desempenho.
+Entre esses conjuntos, o CICIDS-2017~\cite{sharafaldin2018toward} tornou-se referência recorrente por reproduzir fluxos benignos e maliciosos com dezenas de atributos derivados de fluxos de rede.
+Nesta seção, revisamos três trabalhos representativos: dois estudos empíricos no CICIDS-2017 e um \textit{survey} sobre AM adversarial em NIDS.
+
+Jairu e Mailewa~\cite{jairu2022network} propõem uma abordagem supervisionada de inteligência artificial para descoberta de anomalias de rede no CICIDS-2017.
+O estudo enfatiza a insuficiência de IDS baseados apenas em assinaturas e avalia múltiplos classificadores supervisionados sobre características de fluxo, com foco em identificar padrões de tráfego malicioso frente a tráfego legítimo.
+Os autores discutem o papel do pré-processamento e da seleção de atributos para elevar a acurácia na detecção de ataques conhecidos no \textit{dataset}, posicionando o AM como alternativa prática à detecção puramente baseada em regras.
+
+Maseer \textit{et al.}~\cite{maseer2021benchmarking} conduzem um \textit{benchmark} sistemático de algoritmos de AM para IDS baseados em anomalias no CICIDS2017.
+O artigo compara dez técnicas supervisionadas e não supervisionadas---incluindo árvores de decisão, \textit{k}-NN, Naive Bayes, floresta aleatória, SVM e redes neurais---em dezenas de configurações de modelos, reportando acurácia, precisão, \textit{recall}, F1 e tempo de treinamento.
+Os resultados indicam que modelos como \textit{k}-NN, árvore de decisão e Naive Bayes obtêm desempenho competitivo em classes de ataques específicas, mas o desbalanceamento e a diversidade de ataques no CICIDS2017 exigem critérios de avaliação cuidadosos.
+
+Em perspectiva mais ampla, He \textit{et al.}~\cite{he2023adversarial} apresentam um \textit{survey} sobre aprendizado de máquina adversarial aplicado a sistemas de detecção de intrusão em rede (NIDS).
+Os autores organizam taxonomias de NIDS baseados em aprendizado profundo, formulam ataques adversariais voltados a evasão de modelos e revisam mecanismos de defesa.
+O levantamento destaca desafios estruturais da área---como escassez de \textit{datasets} públicos confiáveis, obsolescência rápida de \textit{benchmarks} e limitações de interpretabilidade em modelos de alto desempenho---que motivam avaliações reproduzíveis e análises explicáveis, e não apenas ganhos marginais de acurácia.
+
+\textbf{Posicionamento deste trabalho.}
+Os estudos de Jairu e Mailewa~\cite{jairu2022network} e de Maseer \textit{et al.}~\cite{maseer2021benchmarking} concentram-se principalmente no desempenho preditivo de classificadores no CICIDS-2017, em geral em cenários multiclasse ou fortemente orientados a métricas globais.
+O \textit{survey} de He \textit{et al.}~\cite{he2023adversarial} sistematiza riscos e lacunas de pesquisa, mas não propõe um pipeline experimental único com foco em interpretabilidade.
+Este trabalho diferencia-se por: (i) adotar detecção binária (tráfego legítimo \textit{versus} malicioso) com cinco classificadores clássicos; (ii) analisar interpretabilidade do melhor modelo (por exemplo, SHAP e medidas de importância de atributos); e (iii) documentar a reprodutibilidade dos experimentos (código e ambiente conteinerizado).
+Assim, complementamos \textit{benchmarks} existentes no CICIDS-2017 com uma visão orientada à explicabilidade e à replicação, em linha com as recomendações de pesquisa apontadas por He \textit{et al.}~\cite{he2023adversarial}.
+
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Dataset}
+O \textit{dataset} utilizado é o CICIDS-2017~\cite{sharafaldin2018toward}, 
+produzido pelo Canadian Institute for Cybersecurity.
+O conjunto compreende 14 tipos de ataques, em um cenário de classificação multiclasse 
+nos rótulos originais; neste trabalho, os fluxos são agregados para detecção binária 
+(tráfego legítimo \textit{versus} malicioso).
+
+A distribuição agregada dos rótulos é severamente desbalanceada: 80{,}3\% de fluxos \texttt{BENIGN} e 19{,}7\% \texttt{ATTACK} após unificar os tipos de ataque (Figura~\ref{fig:distribuicao-binaria}).
+Entre as classes de ataque individuais, a disparidade é ainda maior; categorias raras, como \texttt{Heartbleed} (7 amostras) e \texttt{Web\_Attack\_Sql\_Injection} (21 amostras), tornam inviável um treinamento multiclasse estável no escopo deste estudo (Figura~\ref{fig:distribuicao-multiclasse}).
+
+\subsubsection{Formulação binária}
+Dada a dificuldade de aprender classes com menos de 40 amostras no prazo do projeto, agrupamos todos os ataques na classe \texttt{ATTACK} e definimos a tarefa como classificação binária (\texttt{BENIGN} \textit{versus} \texttt{ATTACK}).
+Reconhecemos que essa escolha reduz a granularidade por tipo de ataque; essa limitação é discutida na Seção~\ref{sec:discussion}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{../projeto/archive/eda_01_distribuicao_classes.png}
+  \caption{Distribuição agregada \texttt{BENIGN} \textit{versus} \texttt{ATTACK} no CICIDS-2017.}
+  \label{fig:distribuicao-binaria}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{../projeto/archive/eda_02_tipos_ataque.png}
+  \caption{Distribuição por tipo de ataque no CICIDS-2017.}
+  \label{fig:distribuicao-multiclasse}
+\end{figure}
+
+\subsection{Data and preprocessing}
+\label{sec:preprocessing}
+
+Unificamos os oito arquivos CSV do CICIDS-2017 e aplicamos um \textit{pipeline} de limpeza e redução de dimensionalidade, guiado por análise exploratória (EDA), antes do treinamento dos classificadores.
+
+Os problemas tratados foram:
+\begin{itemize}
+  \item \textbf{Duplicatas:} 255.234 linhas repetidas (9{,}03\% do total), removidas com base nas colunas de fluxo (excluindo metadados de origem do arquivo).
+  \item \textbf{Valores infinitos:} nas colunas \texttt{Flow Bytes/s} e \texttt{Flow Packets/s}, gerados por divisão por zero; substituídos por \texttt{NaN} e descartados na limpeza subsequente.
+  \item \textbf{Variância zero:} oito atributos constantes em todo o conjunto (\texttt{*\_Avg\_Bulk\_*}, \texttt{Bwd PSH Flags}, \texttt{Bwd URG Flags}), eliminados por não contribuírem para a discriminação.
+  \item \textbf{Coluna redundante:} \texttt{Fwd Header Length.1}, idêntica a \texttt{Fwd Header Length}, removida.
+  \item \textbf{Alta correlação:} remoção iterativa de atributos com $|r| \geq 0{,}95$ (Pearson), resultando em 23 \textit{features} redundantes adicionais descartadas.
+  \item \textbf{Outliers:} tratamento pelo método do intervalo interquartil (IQR), com limitação suave (\textit{clipping}) nos extremos das variáveis numéricas, conforme a distribuição observada na EDA (Figura~\ref{fig:outliers-eda}).
+\end{itemize}
+
+Após a agregação binária dos rótulos, a matriz final contém \textbf{47 atributos numéricos} e \textbf{2.824.951 fluxos}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../projeto/archive/eda_04_boxplots_outliers.png}
+  \caption{Boxplots dos atributos com maior incidência de outliers (IQR).}
+  \label{fig:outliers-eda}
+\end{figure}
+
+\subsection{Training pipeline}
+\label{sec:training}
+
+O treinamento foi implementado em Python~3.11 com \textit{scikit-learn}, em cinco etapas, com \texttt{random\_state=42}, \texttt{class\_weight=balanced} (sem SMOTE) e métricas sensíveis ao desbalanceamento (Seção~\ref{sec:metrics}).
+
+\textbf{Algoritmos avaliados.}
+Comparamos cinco classificadores clássicos, escolhidos por interpretabilidade, custo computacional e uso recorrente em \textit{benchmarks} de IDS: Regressão Logística (RL), Random Forest (RF), Árvore de Decisão (AD), Hist Gradient Boosting (HGB) e Naive Bayes Gaussiano (NB).
+A RL é treinada em um \texttt{Pipeline} com \texttt{StandardScaler} ajustado dentro de cada fold de validação, prevenindo \textit{data leakage} do conjunto de validação no escalonamento; árvores e ensemble baseados em árvores (RF, AD, HGB) operam diretamente sobre os atributos originais.
+
+\textbf{Divisão dos dados.}
+Aplicamos \textit{holdout} estratificado 80/20 sobre a matriz final de fluxos, preservando a proporção \texttt{BENIGN}/\texttt{ATTACK} em treino e teste.
+O conjunto de teste permaneceu isolado de todas as etapas subsequentes---validação cruzada, testes estatísticos e otimização de hiperparâmetros---e foi utilizado apenas na avaliação final reportada.
+
+\textbf{Experimentos.}
+\begin{enumerate}
+  \item \textbf{\textit{Spot-checking}:} treino dos cinco modelos com hiperparâmetros padrão da biblioteca (por exemplo, RL com \texttt{max\_iter=1000}, RF com \texttt{n\_estimators=100}) sobre o conjunto de treino e avaliação no conjunto de teste, para triagem inicial.
+  \item \textbf{Validação cruzada:} os mesmos modelos foram reavaliados por \textit{Repeated Stratified K-Fold} com $k=10$ \textit{folds} e três repetições (30 avaliações por modelo), exclusivamente no conjunto de treino, reportando média e desvio padrão de F1, precisão, \textit{recall} e ROC-AUC (classe positiva \texttt{ATTACK}).
+  \item \textbf{Testes estatísticos:} teste de Friedman como procedimento \textit{omnibus} sobre os 30 escores por modelo, seguido de Wilcoxon pareado com correção de Bonferroni entre pares de classificadores.
+  \item \textbf{Otimização de hiperparâmetros:} para os dois modelos mais promissores nas etapas anteriores (RF e HGB), \textit{RandomizedSearchCV} com 20 combinações amostradas e \textit{StratifiedKFold} interno com cinco \textit{folds}; por viabilidade computacional, a busca usou uma amostra estratificada de 20\% do treino, e o melhor modelo foi retreinado no treino completo.
+  \item \textbf{Avaliação final:} modelo otimizado avaliado no \textit{holdout} de teste reservado.
+\end{enumerate}
+
+\subsection{Metrics and Evaluation}
+\label{sec:metrics}
+
+Avaliamos os classificadores com quatro métricas calculadas no \textit{scikit-learn}, sempre com classe positiva \texttt{Attack} (tráfego malicioso): precisão (fração de alertas corretos entre os previstos como ataque), \textit{recall} (fração de ataques reais detectados), F1 (média harmônica entre precisão e \textit{recall}) e ROC-AUC (capacidade de separar as classes ao variar o limiar de decisão).
+Também reportamos acurácia (\textit{accuracy}) como referência, mas não a usamos para ranquear modelos.
+
+As classes previstas vêm de \texttt{predict()}, que no \textit{scikit-learn} aplica limiar 0{,}5 sobre $P(\texttt{Attack})$ quando o modelo fornece probabilidades.
+No \textit{spot-checking} e na avaliação final, precisão, recall e F1 usam \texttt{pos\_label=\"Attack\"} com rótulos categóricos \texttt{Benign}/\texttt{Attack}; o ROC-AUC usa \texttt{predict\_proba} da classe \texttt{Attack} (métrica independente de limiar).
+Na validação cruzada, codificamos $y$ como binário ($1=\texttt{Attack}$, $0=\texttt{Benign}$) e aplicamos os \textit{scorers} \texttt{f1}, \texttt{precision}, \texttt{recall} e \texttt{roc\_auc}: os três primeiros medem a classe positiva codificada como 1 (comportamento binário focado em \texttt{Attack}, sem \texttt{average='macro'} ou \texttt{'weighted'}).
+
+Adotamos o F1 da classe \texttt{Attack} como critério principal de comparação e seleção dos modelos.
+Com cerca de 80\% de fluxos \texttt{Benign} e 20\% \texttt{Attack}, um classificador que prevê sempre tráfego legítimo obtém acurácia elevada, porém F1 nulo para ataques---inadequado para detecção de intrusão, em que falhar em detectar \texttt{Attack} é o erro mais grave.
+O F1 equilibra precisão e \textit{recall}: alta precisão reduz falsos alarmes; alto \textit{recall} aumenta a cobertura de ataques reais.
+
+No \textit{spot-checking}, calculamos as cinco métricas no conjunto de teste reservado, geramos matriz de confusão e \textit{report} de classificação por modelo, e ordenamos os resultados pelo F1 de \texttt{Attack}.
+Na validação cruzada (\textit{Repeated Stratified K-Fold}, 30 avaliações por algoritmo), registramos média e desvio padrão de F1, precisão, \textit{recall} e ROC-AUC apenas no conjunto de treino; esses escores alimentaram os testes de Friedman e Wilcoxon.
+Após a otimização de hiperparâmetros (RF e HGB), a avaliação final no \textit{holdout} de teste repetiu o mesmo conjunto de métricas para estimar o desempenho de generalização.
+
+\subsection{Interpretability}
+\label{sec:interpretability}
+
+Além do desempenho preditivo, analisamos \textit{por que} o classificador separa tráfego legítimo e malicioso---requisito central em IDS, em que operadores precisam auditar alertas e validar se o modelo aprendeu sinais de rede plausíveis, e não artefatos do pré-processamento.
+Tomamos como referência o \textbf{Random Forest otimizado} (\texttt{rf\_opt}), retreinado no conjunto de treino completo após \textit{RandomizedSearchCV}: no \textit{holdout}, obteve o maior F1 da classe \texttt{Attack} entre os modelos ajustados (RF e HGB), além de ser naturalmente interpretável por árvores e compatível com explicadores exatos para florestas.
+
+\textbf{Importância global (Gini).}
+Extraímos \texttt{feature\_importances\_} do RF, que agrega, em todas as árvores, a redução média de impureza de Gini por atributo.
+Trata-se de um ranqueamento global rápido, útil para triagem de variáveis, embora possa favorecer atributos com muitos valores distintos; por isso o complementamos com SHAP.
+As cinco variáveis mais importantes foram \texttt{Destination Port}, \texttt{Average Packet Size}, \texttt{Bwd Packet Length Min}, \texttt{Init\_Win\_bytes\_backward} e \texttt{Bwd Packet Length Std} (Figura~\ref{fig:interp-gini})---atributos ligados a portas, tamanhos de pacote e janelas TCP, coerentes com a natureza fluxo-a-fluxo do CICIDS-2017.
+
+\textbf{SHAP.}
+Aplicamos SHAP (\textit{SHapley Additive exPlanations})~\cite{lundberg2017unified} com \texttt{TreeExplainer}, que calcula contribuições exatas para modelos baseados em árvores.
+Sobre uma amostra aleatória de 5.000 fluxos do conjunto de teste (\texttt{random\_state=42}), obtivemos valores SHAP para a classe \texttt{Attack}: positivos empurram a predição para ataque e negativos para \texttt{Benign}.
+O \textit{beeswarm plot} (Figura~\ref{fig:interp-shap-beeswarm}) resume o efeito de cada atributo no conjunto amostrado; o ranqueamento por $|\text{SHAP}|$ médio recuperou o mesmo núcleo de variáveis do Gini (porta de destino e estatísticas de pacotes/janelas no sentido \textit{backward}).
+Para as cinco variáveis de maior $|\text{SHAP}|$ médio, geramos \textit{dependence plots} (Figura~\ref{fig:interp-shap-dep}), que mostram como o valor de um atributo altera a contribuição marginal e revelam não linearidades e interações com outras \textit{features}.
+A concordância entre Gini e SHAP reforça que o modelo não depende de um único atributo espúrio, mas de um conjunto estável de descritores de fluxo.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../projeto/archive/interp_01_feature_importance_gini.png}
+  \caption{Top-20 atributos por importância de Gini no RF otimizado.}
+  \label{fig:interp-gini}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../projeto/archive/interp_02_shap_beeswarm.png}
+  \caption{Resumo SHAP (\textit{beeswarm}) para a classe \texttt{Attack} ($n=5.000$ fluxos de teste).}
+  \label{fig:interp-shap-beeswarm}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../projeto/archive/interp_03_shap_dependence.png}
+  \caption{\textit{Dependence plots} SHAP das cinco variáveis com maior $|\text{SHAP}|$ médio.}
+  \label{fig:interp-shap-dep}
+\end{figure}
+
+\subsection{Reproducibility}
+Explicar como reproduzir o experimento. Docker e jupyter notebook.
+
+\section{Experiments and Results}
+\label{sec:experiments}
+Rodamos os x algoritmos, cada um levou x tempos e obtivemos x resultados.
+
+\section{Discussion}
+\label{sec:discussion}
+É possivel perceber que tal modelo é o mais eficiente em detectar anomalias com base nesse dataset.
+É possivel percerber que chegamos a tal de nível de interpretabilidade desse modelo
+É possivel perceber que existem caminhos em aberto que podem ser explorados para melhorar o desempenho do modelo,
+sobretudo avaliando o cenário de ataques específicos e não tão frequentes.
+É possível expolorar como LLM's seriam capazes de aprender detecetar anomalias com base nesse dataset.
+É possivel explorar como LLM's seriam capazes de aprender a gerar tráfego malicioso porém com comportamento que pareça
+ser legitimo para o modelo de detecção de anomalias. E como isso poderia ser usado para treinar um modelo de detecção de anomalias mais robusto ainda.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Tentamos encontrar o melhor modelo para detecetar anomalias com base nesse dataset.
+Encontramos X
+
+Tentamos fazer esse modelo ser interpretável
+Conseguimos Y
+
+Entendmeos que o problema é complexo e que ainda temos muito o que aprender sobre detecção de anomalias.
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+% Para os trabalhos que envolverem dados publicamente disponíveis, os grupos
+% devem incluir o link para download no seu artigo.
+
+\end{document}
