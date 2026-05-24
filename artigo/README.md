@@ -6,7 +6,7 @@ Manuscrito em LaTeX (template SBC) para o trabalho prático de Aprendizagem de M
 
 | Item | Caminho |
 |------|---------|
-| Manuscrito | [`artgigo.tex`](artgigo.tex) |
+| Manuscrito | [`artigo.tex`](artigo.tex) |
 | Template SBC | [`tex/sbc/`](tex/sbc/) |
 | Como compilar | [`TEX.md`](TEX.md) |
 | Figuras (notebook) | `../projeto/archive/` |
@@ -18,7 +18,7 @@ O template oficial da disciplina pode estar em `../modelosparapublicaodeartigos/
 ## Build rápido
 
 ```bash
-cd artigo && latexmk -pdf artgigo.tex
+cd artigo && latexmk -pdf artigo.tex
 ```
 
 (Requer MacTeX/BasicTeX — ver [TEX.md](TEX.md).)
