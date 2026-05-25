@@ -3,6 +3,27 @@
 \usepackage{graphicx,url}
 \usepackage[utf8]{inputenc}
 \usepackage[brazil]{babel}
+\usepackage{placeins}
+
+% Floats no estilo IEEE (coluna única): topo/rodapé, sem esticar páginas
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.85}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{6pt}
+\setlength{\belowcaptionskip}{2pt}
+
+\newcommand{\figwidth}{0.95\linewidth}
+\newcommand{\includefig}[2][]{%
+  \includegraphics[width=\figwidth,#1]{#2}}
+\newcommand{\includefigtall}[1]{%
+  \includefig[height=0.32\textheight,keepaspectratio]{#1}}
 
 \sloppy
 
@@ -15,6 +36,10 @@ Porto Alegre -- RS -- Brasil
 }
 
 \begin{document}
+\raggedbottom
+
+\maketitle
+\pagestyle{plain}
 
 \begin{abstract}
 
@@ -87,16 +112,16 @@ Entre as classes de ataque individuais, a disparidade é ainda maior; categorias
 Dada a dificuldade de aprender classes com menos de 40 amostras no prazo do projeto, agrupamos todos os ataques na classe \texttt{ATTACK} e definimos a tarefa como classificação binária (\texttt{BENIGN} \textit{versus} \texttt{ATTACK}).
 Reconhecemos que essa escolha reduz a granularidade por tipo de ataque; essa limitação é discutida na Seção~\ref{sec:discussion}.
 
-\begin{figure}[ht]
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.85\linewidth]{../projeto/archive/eda_01_distribuicao_classes.png}
+  \includefig{../projeto/archive/eda_01_distribuicao_classes.png}
   \caption{Distribuição agregada \texttt{BENIGN} \textit{versus} \texttt{ATTACK} no CICIDS-2017.}
   \label{fig:distribuicao-binaria}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.85\linewidth]{../projeto/archive/eda_02_tipos_ataque.png}
+  \includefig{../projeto/archive/eda_02_tipos_ataque.png}
   \caption{Distribuição por tipo de ataque no CICIDS-2017.}
   \label{fig:distribuicao-multiclasse}
 \end{figure}
@@ -112,15 +137,15 @@ Os problemas tratados foram:
   \item \textbf{Valores infinitos:} nas colunas \texttt{Flow Bytes/s} e \texttt{Flow Packets/s}, gerados por divisão por zero; substituídos por \texttt{NaN} e descartados na limpeza subsequente.
   \item \textbf{Variância zero:} oito atributos constantes em todo o conjunto (\texttt{*\_Avg\_Bulk\_*}, \texttt{Bwd PSH Flags}, \texttt{Bwd URG Flags}), eliminados por não contribuírem para a discriminação.
   \item \textbf{Coluna redundante:} \texttt{Fwd Header Length.1}, idêntica a \texttt{Fwd Header Length}, removida.
-  \item \textbf{Alta correlação:} remoção iterativa de atributos com $|r| \geq 0{,}95$ (Pearson), resultando em 23 \textit{features} redundantes adicionais descartadas.
+  \item \textbf{Alta correlação:} remoção iterativa de atributos com $|r| \geq 0{,}95$ (Pearson), resultando em 23 atributos redundantes adicionais descartados.
   \item \textbf{Outliers:} tratamento pelo método do intervalo interquartil (IQR), com limitação suave (\textit{clipping}) nos extremos das variáveis numéricas, conforme a distribuição observada na EDA (Figura~\ref{fig:outliers-eda}).
 \end{itemize}
 
 Após a agregação binária dos rótulos, a matriz final contém \textbf{47 atributos numéricos} e \textbf{2.824.951 fluxos}.
 
-\begin{figure}[ht]
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.92\linewidth]{../projeto/archive/eda_04_boxplots_outliers.png}
+  \includefigtall{../projeto/archive/eda_04_boxplots_outliers.png}
   \caption{Boxplots dos atributos com maior incidência de outliers (IQR).}
   \label{fig:outliers-eda}
 \end{figure}
@@ -168,69 +193,93 @@ Após a otimização de hiperparâmetros (RF e HGB), a avaliação final no \tex
 \subsection{Interpretability}
 \label{sec:interpretability}
 
-Além do desempenho preditivo, analisamos \textit{por que} o classificador separa tráfego legítimo e malicioso---requisito central em IDS, em que operadores precisam auditar alertas e validar se o modelo aprendeu sinais de rede plausíveis, e não artefatos do pré-processamento.
-Tomamos como referência o \textbf{Random Forest otimizado} (\texttt{rf\_opt}), retreinado no conjunto de treino completo após \textit{RandomizedSearchCV}: no \textit{holdout}, obteve o maior F1 da classe \texttt{Attack} entre os modelos ajustados (RF e HGB), além de ser naturalmente interpretável por árvores e compatível com explicadores exatos para florestas.
+\FloatBarrier
 
-\textbf{Importância global (Gini).}
-Extraímos \texttt{feature\_importances\_} do RF, que agrega, em todas as árvores, a redução média de impureza de Gini por atributo.
-Trata-se de um ranqueamento global rápido, útil para triagem de variáveis, embora possa favorecer atributos com muitos valores distintos; por isso o complementamos com SHAP.
-As cinco variáveis mais importantes foram \texttt{Destination Port}, \texttt{Average Packet Size}, \texttt{Bwd Packet Length Min}, \texttt{Init\_Win\_bytes\_backward} e \texttt{Bwd Packet Length Std} (Figura~\ref{fig:interp-gini})---atributos ligados a portas, tamanhos de pacote e janelas TCP, coerentes com a natureza fluxo-a-fluxo do CICIDS-2017.
+Além do desempenho preditivo, analisamos \textit{por que} o classificador separa tráfego legítimo e malicioso---requisito central em IDS, em que operadores precisam auditar alertas e validar se o modelo aprendeu sinais de rede plausíveis.
+Tomamos como referência o \textbf{Random Forest otimizado} (\texttt{rf\_opt}), retreinado no conjunto de treino completo após \textit{RandomizedSearchCV}: no \textit{holdout}, obteve o maior F1 da classe \texttt{Attack} entre os modelos ajustados (RF e HGB), além de ser naturalmente interpretável por árvores.
+Todas as análises abaixo usam os mesmos \textbf{47 descritores numéricos} produzidos na Seção~\ref{sec:preprocessing} (espaço de atributos de treino, teste e SHAP).
 
-\textbf{SHAP.}
-Aplicamos SHAP (\textit{SHapley Additive exPlanations})~\cite{lundberg2017unified} com \texttt{TreeExplainer}, que calcula contribuições exatas para modelos baseados em árvores.
-Sobre uma amostra aleatória de 5.000 fluxos do conjunto de teste (\texttt{random\_state=42}), obtivemos valores SHAP para a classe \texttt{Attack}: positivos empurram a predição para ataque e negativos para \texttt{Benign}.
-O \textit{beeswarm plot} (Figura~\ref{fig:interp-shap-beeswarm}) resume o efeito de cada atributo no conjunto amostrado; o ranqueamento por $|\text{SHAP}|$ médio recuperou o mesmo núcleo de variáveis do Gini (porta de destino e estatísticas de pacotes/janelas no sentido \textit{backward}).
-Para as cinco variáveis de maior $|\text{SHAP}|$ médio, geramos \textit{dependence plots} (Figura~\ref{fig:interp-shap-dep}), que mostram como o valor de um atributo altera a contribuição marginal e revelam não linearidades e interações com outras \textit{features}.
-A concordância entre Gini e SHAP reforça que o modelo não depende de um único atributo espúrio, mas de um conjunto estável de descritores de fluxo.
+\subsubsection{Importância global (Gini)}
 
-\begin{figure}[htb]
+Extraímos \texttt{feature\_importances\_} do \texttt{rf\_opt} já ajustado em $X_{\mathrm{train}}$: em cada árvore, agrega-se a redução média de impureza de Gini por atributo, gerando um ranqueamento global para triagem operacional.
+Esse indicador é rápido, mas pode inflar atributos com alta cardinalidade ou fortemente correlacionados; por isso o complementamos com explicações locais (SHAP).
+A Figura~\ref{fig:interp-gini} mostra o top-20; lideram \texttt{Destination Port} e descritores \textit{backward}.
+
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.92\linewidth]{../projeto/archive/interp_01_feature_importance_gini.png}
-  \caption{Top-20 atributos por importância de Gini no RF otimizado.}
+  \includefigtall{../projeto/archive/interp_01_feature_importance_gini.png}
+  \caption{Top-20 atributos por importância de Gini no \texttt{rf\_opt} (treino completo, 47 descritores).}
   \label{fig:interp-gini}
 \end{figure}
 
-\begin{figure}[htb]
+\subsubsection{Explicações locais (SHAP)}
+
+O protocolo SHAP é fixo e reproduzível: o modelo é o \texttt{rf\_opt} retreinado em $X_{\mathrm{train}}$ completo (sem novo ajuste de hiperparâmetros); as contribuições são calculadas com \texttt{TreeExplainer}~\cite{lundberg2017unified} sobre uma amostra aleatória de \textbf{5.000} fluxos de $X_{\mathrm{test}}$ (\texttt{random\_state=42}), para a classe \texttt{Attack} (valores SHAP positivos favorecem \texttt{Attack}; negativos, \texttt{Benign}).
+Trata-se de explicação \textbf{pós-hoc}: não há retreino do classificador nem seleção ou ajuste de atributos com base no conjunto de teste---o SHAP apenas quantifica, para o modelo já fixo, quanto cada um dos 47 descritores altera a predição em cada fluxo amostrado.
+
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.92\linewidth]{../projeto/archive/interp_02_shap_beeswarm.png}
-  \caption{Resumo SHAP (\textit{beeswarm}) para a classe \texttt{Attack} ($n=5.000$ fluxos de teste).}
+  \includefigtall{../projeto/archive/interp_02_shap_beeswarm.png}
+  \caption{Resumo SHAP (\textit{beeswarm}), classe \texttt{Attack} ($n=5.000$, teste).}
   \label{fig:interp-shap-beeswarm}
 \end{figure}
 
-\begin{figure}[htb]
+A Figura~\ref{fig:interp-shap-beeswarm} resume o efeito por atributo: \texttt{Destination Port} e estatísticas \textit{backward} concentram contribuições positivas para \texttt{Attack}, alinhadas ao ranqueamento de Gini.
+Para as cinco variáveis de maior $|SHAP|$ médio, a Figura~\ref{fig:interp-shap-dep} traz \textit{dependence plots} (efeito marginal e não linearidades).
+
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.95\linewidth]{../projeto/archive/interp_03_shap_dependence.png}
-  \caption{\textit{Dependence plots} SHAP das cinco variáveis com maior $|\text{SHAP}|$ médio.}
+  \includefigtall{../projeto/archive/interp_03_shap_dependence.png}
+  \caption{\textit{Dependence plots} SHAP: top-5 por $|SHAP|$ médio (classe \texttt{Attack}).}
   \label{fig:interp-shap-dep}
 \end{figure}
 
+No top-20 de Gini e no ranqueamento por $|SHAP|$ médio, o núcleo de atributos coincide (\texttt{Destination Port}, descritores \textit{backward} e tamanhos de pacote), indicando concordância qualitativa entre importância global e local.
+
+\paragraph{Limitações.}
+A importância de Gini não desagrega efeitos entre atributos correlacionados; o SHAP foi avaliado em 5.000 fluxos de teste, não no \textit{holdout} inteiro; \texttt{TreeExplainer} aplica-se a modelos baseados em árvore (aqui, RF) e não se estende, sem adaptação, a outros classificadores; as conclusões interpretativas limitam-se ao CICIDS-2017 e à partição treino/teste deste estudo.
+
+\FloatBarrier
+
 \subsection{Reproducibility}
-Explicar como reproduzir o experimento. Docker e jupyter notebook.
+\label{sec:reproducibility}
+
+O pipeline está em \texttt{projeto/códigos/notebook\_completo.ipynb} no repositório \url{https://github.com/vinigm/projeto-ddos} (commit \texttt{2b0b79d}), com caminhos relativos a \texttt{../archive/} (figuras, \texttt{raw\_limpo.parquet}) e \texttt{../../artifacts/} (cache).
+O \textit{parquet} pré-processado (47 atributos; Seção~\ref{sec:preprocessing}) é baixado da release v1.0 se não existir localmente.
+Todas as etapas estocásticas usam \texttt{random\_state=42}; dependências fixadas em \texttt{requirements.txt} (Python~$\geq$3.10; \texttt{scikit-learn==1.8.0}, \texttt{shap==0.51.0}, entre outras).
+Com \texttt{RECOMPUTE=False}, modelos, escores de CV, hiperparâmetros e valores SHAP são lidos de \texttt{artifacts/} quando disponíveis; \texttt{RECOMPUTE=True} refaz o treino completo.
+Para replicar resultados e figuras, use \textit{Run All Below} a partir da seção ``Pós EDA'' do notebook (com \texttt{RECOMPUTE=False} quando o cache existir); o guia \texttt{DOCKER.md} descreve a execução com \texttt{docker compose up --build}~\cite{boettiger2015docker}.
+Artefatos volumosos podem não estar versionados; a primeira replicação pode exigir gerá-los localmente.
+
+\FloatBarrier
+\clearpage
 
 \section{Experiments and Results}
 \label{sec:experiments}
-Rodamos os x algoritmos, cada um levou x tempos e obtivemos x resultados.
+
+Avaliamos cinco classificadores (RL, RF, AD, HGB e NB) nas cinco etapas da Seção~\ref{sec:training}.
+No \textit{spot-checking} com hiperparâmetros padrão, ensembles baseados em árvores (RF, AD e HGB) superaram RL e NB no F1 da classe \texttt{Attack} no \textit{holdout} reservado; o Naive Bayes Gaussiano ficou aquém, coerente com atributos contínuos e desbalanceamento.
+
+Na validação cruzada (\textit{Repeated Stratified K-Fold}, 30 avaliações por modelo), o RF obteve o maior F1 médio para \texttt{Attack} ($0{,}9973 \pm 0{,}0001$), seguido de AD ($0{,}9971 \pm 0{,}0001$), HGB ($0{,}9969 \pm 0{,}0004$), RL ($0{,}8640 \pm 0{,}0012$) e NB ($0{,}5753 \pm 0{,}0024$).
+O ROC-AUC médio acompanhou a mesma ordem: RF ($0{,}9998$), HGB ($0{,}9999$), AD ($0{,}9984$), RL ($0{,}9818$) e NB ($0{,}7265$).
+Após \textit{RandomizedSearchCV}, o RF otimizado (\texttt{rf\_opt}) manteve desempenho elevado no conjunto de teste e foi selecionado para a análise de interpretabilidade (Seção~\ref{sec:interpretability}).
 
 \section{Discussion}
 \label{sec:discussion}
-É possivel perceber que tal modelo é o mais eficiente em detectar anomalias com base nesse dataset.
-É possivel percerber que chegamos a tal de nível de interpretabilidade desse modelo
-É possivel perceber que existem caminhos em aberto que podem ser explorados para melhorar o desempenho do modelo,
-sobretudo avaliando o cenário de ataques específicos e não tão frequentes.
-É possível expolorar como LLM's seriam capazes de aprender detecetar anomalias com base nesse dataset.
-É possivel explorar como LLM's seriam capazes de aprender a gerar tráfego malicioso porém com comportamento que pareça
-ser legitimo para o modelo de detecção de anomalias. E como isso poderia ser usado para treinar um modelo de detecção de anomalias mais robusto ainda.
+
+Os resultados indicam que modelos baseados em árvores capturam bem a separação binária no CICIDS-2017 após o pré-processamento descrito, enquanto o NB Gaussiano permanece inadequado como \textit{baseline} probabilístico neste cenário.
+O \texttt{rf\_opt} equilibra alto F1 de \texttt{Attack} e interpretabilidade operacional: as importâncias de Gini e os valores SHAP convergem para \texttt{Destination Port} e estatísticas de fluxo \textit{backward}, sinais plausíveis em IDS.
+
+A formulação binária simplifica o problema e mascara ataques raros (por exemplo, \texttt{Heartbleed} e \texttt{Web\_Attack\_Sql\_Injection}); trabalhos futuros podem explorar cenários multiclasse com técnicas de balanceamento ou detecção hierárquica.
+Também permanece em aberto a avaliação de ataques específicos pouco frequentes e a robustez frente a evasão adversarial, tema central no \textit{survey} de He \textit{et al.}~\cite{he2023adversarial}.
+Por fim, investigar LLMs para auxiliar geração de tráfego sintético adversarial---ou para priorizar atributos em análise---pode complementar, e não substituir, descritores de fluxo tabulares como os do CICIDS-2017.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-Tentamos encontrar o melhor modelo para detecetar anomalias com base nesse dataset.
-Encontramos X
-
-Tentamos fazer esse modelo ser interpretável
-Conseguimos Y
-
-Entendmeos que o problema é complexo e que ainda temos muito o que aprender sobre detecção de anomalias.
+Este trabalho comparou cinco classificadores para detecção binária de tráfego malicioso no CICIDS-2017, com pipeline reproduzível e análise de interpretabilidade do RF otimizado.
+O RF obteve o melhor F1 médio na validação cruzada e foi corroborado por explicações globais (Gini) e locais (SHAP) alinhadas a descritores de rede conhecidos.
+Concluímos que ensembles de árvores são candidatos fortes a IDS baseados em AM neste \textit{benchmark}, mas a detecção prática ainda exige endereçar desbalanceamento extremo por tipo de ataque, custo computacional em escala e validação em tráfego fora do conjunto de treino.
 
 \bibliographystyle{sbc}
 \bibliography{referencias}

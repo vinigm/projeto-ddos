@@ -1,5 +1,5 @@
 # Executar a partir de artigo/ (pasta deste arquivo)
-$ENV{'TEXINPUTS'} = './tex/sbc//:' . ( $ENV{'TEXINPUTS'} // '' );
+$ENV{'TEXINPUTS'} = './/:./tex/sbc//:' . ( $ENV{'TEXINPUTS'} // '' );
 $ENV{'BIBINPUTS'}  = './tex/sbc//:' . ( $ENV{'BIBINPUTS'}  // '' );
 $ENV{'BSTINPUTS'}  = './tex/sbc//:' . ( $ENV{'BSTINPUTS'}  // '' );
 

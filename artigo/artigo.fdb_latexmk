@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex artigo"] 1779663980.53215 "artigo.aux" "artigo.bbl" "artigo" 1779663982.10726 0
-  "./tex/sbc/referencias.bib" 1779663961.20938 3084 b399260da6bc12e265ea53bb49dac413 ""
+["bibtex artigo"] 1779671702.12951 "artigo.aux" "artigo.bbl" "artigo" 1779671933.0555 0
+  "./tex/sbc/referencias.bib" 1779671683.16485 3394 092dcedea3334789e547a4b87a851dd6 ""
   "./tex/sbc/sbc.bst" 1779209590.01728 22967 511e98fabaafd3202f10e6dbe23db027 ""
-  "artigo.aux" 1779663982.01544 4408 abb74d57f32fd4aa6b4ffc4f7ca953f3 "pdflatex"
+  "artigo.aux" 1779671932.96268 4990 4f669de6b6f28e6a783ec7881eb0633c "pdflatex"
   (generated)
   "artigo.bbl"
   "artigo.blg"
   (rewritten before read)
-["pdflatex"] 1779663980.55423 "artigo.tex" "artigo.pdf" "artigo" 1779663982.10744 2
+["pdflatex"] 1779671931.47126 "artigo.tex" "artigo.pdf" "artigo" 1779671933.05564 0
   "../projeto/archive/eda_01_distribuicao_classes.png" 1779145382.1656 67711 f03d3d4cc2acc04748010a565515bdbb ""
   "../projeto/archive/eda_02_tipos_ataque.png" 1779145382.16648 103453 9c7246e166eaebcd26a52f95e8de12e0 ""
   "../projeto/archive/eda_04_boxplots_outliers.png" 1779145382.16748 165233 497374eda04de721fec4d769f2cd2a59 ""
@@ -46,6 +46,7 @@
   "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb" 1248133631 36741 fa121aac0049305630cf160b86157ee4 ""
   "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1248133631 35752 024fb6c41858982481f6968b5fc26508 ""
   "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1248133631 32722 d7379af29a190c3f453aba36302ff5a9 ""
+  "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb" 1248133631 32726 0a1aea6fcd6468ee2cf64d891f5c43c8 ""
   "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/courier/ucrb8a.pfb" 1136849748 50493 4ed1f7e9eba8f1f3e1ec25195460190d ""
   "/usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb" 1136849748 45758 19968a0990191524e34e1994d4a31cb6 ""
@@ -72,10 +73,6 @@
   "/usr/local/texlive/2026basic/texmf-dist/tex/generic/babel/txtbabel.def" 1768770623 5231 c1599e5bf7d2ee42743212a7f8d20a56 ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/generic/iftex/iftex.sty" 1734129479 7984 7dbb9280f03c0a315425f1b4f35d43ee ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/generic/iftex/ifvtex.sty" 1572645307 1057 525c2192b5febbd8c1f662c9468335bb ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/generic/infwarerr/infwarerr.sty" 1575499628 8356 7bbb2c2373aa810be568c29e333da8ed ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty" 1576878844 5412 d5a2436094cd7be85769db90f29250a6 ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty" 1701727651 17865 1a9bd36b4f98178fa551aca822290953 ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty" 1593379760 20089 80423eac55aa175305d35b49e04fe23b ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/base/article.cls" 1748806692 20144 b966087dda3b194755eb460d32e2ef75 ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/base/inputenc.sty" 1738182759 5048 0270515b828149155424600fd2d58ac5 ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/base/size12.clo" 1748806692 8449 8dc66c6c313c8eb2d774af83bca435dd ""
@@ -89,9 +86,6 @@
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics/graphicx.sty" 1748806692 8118 43b99e52946c33a23f5f43b52d5cc5ec ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics/keyval.sty" 1748806692 2671 d9941f4bf4750e9b0603c9a2ec54693b ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics/trig.sty" 1748806692 4023 e66acf578d6b564c4670fb57ff336a7a ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/latex/grfext/grfext.sty" 1575499774 7133 b94bbacbee6e4fdccdc7f810b2aec370 ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/latex/kvoptions/kvoptions.sty" 1655478651 22555 6d8e155cfef6d82c3d5c742fea7c992e ""
-  "/usr/local/texlive/2026basic/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty" 1665067230 13815 760b0c02f691ea230f5359c4e1de23a7 ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def" 1761248321 30662 bfd6e864f4ffc5018b0e2b6260c3181c ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg" 1279039959 678 4792914a8f45be57bb98413425e4c7af ""
   "/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/ot1pcr.fd" 1137110629 985 1ed784d7bfe47179f3550d2303b073f8 ""
@@ -105,9 +99,10 @@
   "/usr/local/texlive/2026basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1779211483 323232 a535625b038a5f4a7d8c4daf390244d9 ""
   "/usr/local/texlive/2026basic/texmf-var/web2c/pdftex/pdflatex.fmt" 1779210591 2966191 8a54cd3cfc74626bef8619225000f15d ""
   "/usr/local/texlive/2026basic/texmf.cnf" 1772405582 628 bbc09d6d38872d53c11bb48dc9b14e88 ""
-  "artigo.aux" 1779663982.01544 4408 abb74d57f32fd4aa6b4ffc4f7ca953f3 "pdflatex"
-  "artigo.bbl" 1779663980.5532 1800 a296bb76a94ecd0852984239178d5652 "bibtex artigo"
-  "artigo.tex" 1779663971.34874 21164 92b28638ea1cdcfb5427835a58ecb658 ""
+  "artigo.aux" 1779671932.96268 4990 4f669de6b6f28e6a783ec7881eb0633c "pdflatex"
+  "artigo.bbl" 1779671702.14713 2001 892f5da918b5adc33df8b0f030c06275 "bibtex artigo"
+  "artigo.tex" 1779671924.83841 25387 09b6f233e5fee046bb68a0c439132947 ""
+  "placeins.sty" 1779669171.22098 4087 636308456f60d2b31cbf97867db5708d ""
   "tex/sbc/sbc-template.sty" 1779209589.5905 5445 c11f91c7e54330186883fc8760b7b9df ""
   (generated)
   "artigo.aux"

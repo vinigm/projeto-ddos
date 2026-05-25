@@ -1,5 +1,10 @@
 \begin{thebibliography}{}
 
+\bibitem[Boettiger 2015]{boettiger2015docker}
+Boettiger, C. (2015).
+\newblock An introduction to {Docker} for reproducible research.
+\newblock {\em ACM SIGOPS Operating Systems Review}, 49(1):71--79.
+
 \bibitem[He et~al. 2023]{he2023adversarial}
 He, K., Kim, D.~D., and Asghar, M.~R. (2023).
 \newblock Adversarial machine learning for network intrusion detection systems:

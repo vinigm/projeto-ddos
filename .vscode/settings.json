@@ -1,5 +1,5 @@
 {
-  "latex-workshop.latex.rootFile": "artigo/artgigo.tex",
+  "latex-workshop.latex.rootFile": "artigo/artigo.tex",
   "latex-workshop.latex.texDirs": ["artigo"],
   "latex-workshop.latex.outDir": "%DIR%",
   "latex-workshop.latex.tools": [
@@ -16,9 +16,9 @@
       ],
       "env": {
         "PATH": "/Library/TeX/texbin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-        "TEXINPUTS": "./tex/sbc//:",
-        "BIBINPUTS": "./tex/sbc//:",
-        "BSTINPUTS": "./tex/sbc//:"
+        "TEXINPUTS": ".//:./tex/sbc//:",
+        "BIBINPUTS": ".//:./tex/sbc//:",
+        "BSTINPUTS": ".//:./tex/sbc//:"
       }
     },
     {
@@ -34,9 +34,9 @@
       ],
       "env": {
         "PATH": "/Library/TeX/texbin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-        "TEXINPUTS": "./tex/sbc//:",
-        "BIBINPUTS": "./tex/sbc//:",
-        "BSTINPUTS": "./tex/sbc//:"
+        "TEXINPUTS": ".//:./tex/sbc//:",
+        "BIBINPUTS": ".//:./tex/sbc//:",
+        "BSTINPUTS": ".//:./tex/sbc//:"
       }
     },
     {
@@ -50,9 +50,9 @@
       ],
       "env": {
         "PATH": "/Library/TeX/texbin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-        "TEXINPUTS": "./tex/sbc//:",
-        "BIBINPUTS": "./tex/sbc//:",
-        "BSTINPUTS": "./tex/sbc//:"
+        "TEXINPUTS": ".//:./tex/sbc//:",
+        "BIBINPUTS": ".//:./tex/sbc//:",
+        "BSTINPUTS": ".//:./tex/sbc//:"
       }
     },
     {
