@@ -6,8 +6,12 @@ projeto/archive/*.pcap_ISCX.csv
 
 # Dataset pós-limpeza (regerado pelo notebook)
 projeto/archive/*.parquet
+opcao2/archive/*.parquet
 
 # ───────────── Material com copyright / não publicável ─────────
+# Artigo (LaTeX/PDF) — manter local ou em repo privado separado
+artigo/
+
 # PDF do enunciado oficial (material da professora)
 Trabalho Prático - Enunciado.pdf
 
@@ -18,9 +22,6 @@ modelosparapublicaodeartigos/
 # Papers de terceiros (apenas referência local)
 projeto/Anomalias de Rede CICIDS 2017.pdf
 projeto/Benchmarking Machine Learning Anomaly Detection.pdf
-
-# Mensagem pessoal (origem do tema)
-projeto/mensagem_matheus.txt
 
 # Documentação interna / rascunhos — não publicar
 projeto/contexto/
@@ -46,18 +47,6 @@ __pycache__/
 # ───────────── Outputs efêmeros ─────────────
 *.log
 *.tmp
-
-# ───────────── Arquivos auxiliares do LaTeX (gerados a cada compile) ─────────────
-artigo/*.aux
-artigo/*.bbl
-artigo/*.blg
-artigo/*.out
-artigo/*.toc
-artigo/*.lof
-artigo/*.lot
-artigo/*.fls
-artigo/*.fdb_latexmk
-artigo/*.synctex.gz
 
 # ───────────── Duplicatas do Google Drive ─────────────
 *copy*.ipynb

@@ -1,0 +1,23 @@
+# Jupyter Lab com Python e dependências fixadas no Dockerfile.
+#
+# Uso (na raiz do clone):
+#   docker compose up --build
+#
+# Navegador: http://localhost:8888/lab?token=ddos-local
+#
+# Porta alternativa:
+#   JUPYTER_PORT=8890 docker compose up --build
+
+services:
+  jupyter:
+    build: .
+    container_name: projeto-ddos-jupyter
+    ports:
+      - "${JUPYTER_PORT:-8888}:8888"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace/opcao2/códigos
+    environment:
+      MPLBACKEND: Agg
+    stdin_open: true
+    tty: true

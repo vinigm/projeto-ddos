@@ -13,6 +13,10 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 ```
 .
 ├── README.md                        ← este arquivo
+├── DOCKER.md                        ← como rodar o experimento com Docker
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── requirements.txt                 ← dependências Python (versões fixadas)
 ├── .gitignore
 ├── artifacts/                       ← cache de modelos, scores e SHAP (ver artifacts/README.md)
@@ -23,7 +27,7 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 │   └── archive/
 │       ├── eda_*.png                ← figuras de EDA (geradas pelo notebook)
 │       └── interp_*.png             ← figuras de interpretabilidade (SHAP, Gini)
-└── artigo/                       ← artigo científico (em construção)
+└── artigo/                       ← artigo SBC (artgigo.tex — ver artigo/TEX.md)
 ```
 
 **Não versionados** (ver `.gitignore`): CSVs do CICIDS-2017 (~880 MB), `raw_limpo.parquet` (234 MB), PDFs com copyright e ambiente virtual.
@@ -31,6 +35,10 @@ Trabalho prático da disciplina **CMP263 — Aprendizagem de Máquina** (PPGC/UF
 ---
 
 ## Reprodutibilidade
+
+### Docker (plug and play)
+
+Para subir **Jupyter Lab** em container (Python 3.11 e dependências fixadas), sem configurar Python no host, siga o guia **[DOCKER.md](DOCKER.md)**.
 
 ### 1. Pré-requisitos
 

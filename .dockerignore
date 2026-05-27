@@ -1,0 +1,16 @@
+.git
+**/__pycache__
+**/*.pyc
+**/.ipynb_checkpoints
+.venv
+venv
+*.egg-info
+.DS_Store
+
+# Reduz o contexto do `docker build` (dados grandes permanecem no volume em runtime).
+opcao2/archive/*.csv
+opcao2/archive/*.parquet
+artifacts/*.joblib
+artifacts/*.npz
+artifacts/*.json
+artifacts/*.csv
