@@ -3,8 +3,30 @@
 \usepackage{graphicx,url}
 \usepackage[utf8]{inputenc}
 \usepackage[brazil]{babel}
+\usepackage{indentfirst}
 \usepackage{placeins}
 \usepackage{float}
+
+% Mesma indentação horizontal do Abstract/Resumo no sbc-template.sty (\leftmargin=0.8cm)
+\newlength{\sbcblockmargin}
+\setlength{\sbcblockmargin}{0.8cm}
+\makeatletter
+% Corpo alinhado ao bloco do abstract/resumo (sem depender do pacote changepage)
+\newenvironment{sbcnarrowblock}{%
+  \list{}{%
+    \topsep\z@
+    \partopsep\z@
+    \itemsep\z@
+    \parsep\z@
+    \leftmargin=\sbcblockmargin
+    \rightmargin=\sbcblockmargin
+    \listparindent=\parindent
+    \itemindent=\z@
+    \labelwidth=\z@
+    \labelsep=\z@
+  }\item\relax}
+{\endlist}
+\makeatother
 
 % Floats no estilo IEEE (coluna única): topo/rodapé, sem esticar páginas
 \setcounter{topnumber}{2}
@@ -38,9 +60,9 @@
 
 \author{Matheus Fraga Cardoso, Vinícius Guerra de Mello}
 
-\address{Programa de Pós-Graduação em Computação (PPGC) -- Universidade Federal do Rio Grande do Sul \\
-Porto Alegre -- RS -- Brasil
-}
+\address{Programa de Pós-Graduação em Computação (PPGC) --\\
+Universidade Federal do Rio Grande do Sul (UFRGS)\\
+Porto Alegre -- RS -- Brasil}
 
 \begin{document}
 \raggedbottom
@@ -67,6 +89,7 @@ As análises de Gini e SHAP convergiram para \texttt{Destination Port} e estatí
 Priorizamos a reprodutibilidade: código, modelos, artefatos intermediários e \textit{dataset} pré-processado estão publicamente disponíveis, permitindo reprodução completa com cache de artefatos. Além disso, o \textit{pipeline} pode ser reproduzido em qualquer máquina com as mesmas dependências, com o uso de um container Docker.
 \end{resumo}
 
+\begin{sbcnarrowblock}
 \section{Introdução}
 \label{sec:introduction}
 
@@ -473,4 +496,5 @@ Como perspectivas, propomos:
 % Para os trabalhos que envolverem dados publicamente disponíveis, os grupos
 % devem incluir o link para download no seu artigo.
 
+\end{sbcnarrowblock}
 \end{document}
